@@ -87,6 +87,10 @@ async function loadChats() {
 }
 
 async function loadChat(chatId) {
+  if (currentChatId === chatId) {
+    sidebar.classList.remove("open");
+    return;
+  }
   currentChatId = chatId;
   chat.innerHTML = "";
   welcome.classList.add("hidden");
