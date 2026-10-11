@@ -45,20 +45,19 @@ app.post("/api/chat", async (req, res) => {
   }
 });
 
-// Sayfa route'ları
-app.get("/admin", (req, res) => {
-  res.sendFile(path.join(__dirname, "public", "admin.html"));
+// Sayfa route'ları (.html gizli)
+app.get("/login", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
 app.get("/app", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "app.html"));
 });
 
-app.get("/login", (req, res) => {
-  res.sendFile(path.join(__dirname, "public", "index.html"));
+app.get("/admin", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "admin.html"));
 });
 
-// Ana sayfa
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "index.html"));
 });
