@@ -42,7 +42,6 @@ body {
 }
 .chat__avatar--ai {
   background: transparent;
-  color: var(--accent);
 }
 
 /* AUTH */
@@ -63,7 +62,17 @@ body {
   gap: 14px;
   text-align: center;
 }
-.auth-logo { font-size: 3rem; color: var(--accent); }
+.auth-logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 8px;
+}
+.auth-logo-img {
+  width: 64px;
+  height: 64px;
+  object-fit: contain;
+}
 .auth-title { font-size: 1.8rem; font-weight: 500; }
 .auth-sub { color: var(--text-dim); font-size: 0.95rem; margin-bottom: 8px; }
 
@@ -296,7 +305,6 @@ body {
   align-items: center;
   padding: 80px 16px 140px;
   overflow-y: auto;
-  scroll-behavior: smooth;
 }
 .welcome {
   display: flex;
@@ -320,12 +328,10 @@ body {
   flex-direction: column;
   gap: 24px;
 }
-
 .chat__msg {
   display: flex;
   gap: 16px;
 }
-
 .chat__msg--user {
   justify-content: flex-end;
 }
@@ -335,7 +341,6 @@ body {
   padding: 12px 18px;
   max-width: 70%;
 }
-
 .chat__msg--ai {
   display: flex;
   flex-direction: row;
@@ -352,7 +357,6 @@ body {
   flex: 1;
   margin-top: 0;
 }
-
 .chat__avatar {
   width: 32px;
   height: 32px;
@@ -361,7 +365,6 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.2rem;
 }
 
 .chat__bubble {
