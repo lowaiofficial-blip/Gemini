@@ -304,8 +304,14 @@ body {
   padding: 12px 18px;
   max-width: 70%;
 }
+.chat__msg--ai {
+  align-items: flex-start;
+}
+.chat__msg--ai .chat__avatar {
+  margin-top: 4px;
+}
 .chat__msg--ai .chat__bubble {
-  padding: 4px 0;
+  padding: 0;
   max-width: 100%;
 }
 .chat__avatar {
