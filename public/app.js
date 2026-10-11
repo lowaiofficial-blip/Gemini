@@ -1,7 +1,7 @@
 import { auth, db } from "./firebase.js";
 import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import {
-  collection, addDoc, getDocs, doc, getDoc, setDoc, query, where, orderBy, serverTimestamp, updateDoc
+  collection, addDoc, getDocs, doc, getDoc, setDoc, query, where, serverTimestamp, updateDoc
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const chat = document.getElementById("chat");
@@ -22,7 +22,7 @@ let currentChatId = null;
 
 onAuthStateChanged(auth, async (user) => {
   if (!user) {
-    window.location.href = "index.html";
+    window.location.href = "/login";
     return;
   }
   currentUser = user;
@@ -39,7 +39,7 @@ sidebarClose.addEventListener("click", () => sidebar.classList.remove("open"));
 
 logoutBtn.addEventListener("click", async () => {
   await signOut(auth);
-  window.location.href = "index.html";
+  window.location.href = "/login";
 });
 
 newChatBtn.addEventListener("click", () => {
@@ -107,7 +107,6 @@ async function sendMessage() {
   sendBtn.classList.remove("visible");
   addMessage("user", text);
 
-  // Yeni sohbet aç
   if (!currentChatId) {
     const docRef = await addDoc(collection(db, "chats"), {
       uid: currentUser.uid,
@@ -115,12 +114,9 @@ async function sendMessage() {
       createdAt: serverTimestamp()
     });
     currentChatId = docRef.id;
-
-    // Başlığı Gemini'ye ürettir
     generateTitle(currentChatId, text);
   }
 
-  // Kullanıcı mesajını kaydet
   await addDoc(collection(db, "chats", currentChatId, "messages"), {
     role: "user",
     text,
