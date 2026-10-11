@@ -49,6 +49,7 @@ newChatBtn.addEventListener("click", () => {
   promptInput.value = "";
   promptInput.focus();
   sidebar.classList.remove("open");
+  loadChats();
 });
 
 promptInput.addEventListener("input", () => {
@@ -78,6 +79,7 @@ async function loadChats() {
   chats.forEach((c) => {
     const item = document.createElement("div");
     item.className = "sidebar__recent-item";
+    if (c.id === currentChatId) item.classList.add("active");
     item.innerHTML = `<span>${escapeHtml(c.title || "Yeni sohbet")}</span>`;
     item.addEventListener("click", () => loadChat(c.id));
     chatList.appendChild(item);
@@ -88,6 +90,7 @@ async function loadChat(chatId) {
   currentChatId = chatId;
   chat.innerHTML = "";
   welcome.classList.add("hidden");
+  await loadChats();
 
   const msgSnap = await getDocs(collection(db, "chats", chatId, "messages"));
   const msgs = [];
@@ -122,6 +125,8 @@ async function sendMessage() {
     text,
     timestamp: serverTimestamp()
   });
+
+  await loadChats();
 
   const typingEl = addTyping();
 
@@ -194,7 +199,7 @@ function addMessage(role, text) {
     `;
   }
   chat.appendChild(msg);
-  chat.scrollTop = chat.scrollHeight;
+  msg.scrollIntoView({ behavior: "smooth", block: "end" });
   return msg;
 }
 
@@ -206,7 +211,7 @@ function addTyping() {
     <div class="chat__typing"><span></span><span></span><span></span></div>
   `;
   chat.appendChild(el);
-  chat.scrollTop = chat.scrollHeight;
+  el.scrollIntoView({ behavior: "smooth", block: "end" });
   return el;
 }
 
@@ -218,10 +223,19 @@ function escapeHtml(str) {
 
 function formatText(text) {
   let html = escapeHtml(text);
+
   html = html.replace(/```([\s\S]*?)```/g, "<pre><code>$1</code></pre>");
   html = html.replace(/`([^`]+)`/g, "<code>$1</code>");
   html = html.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
-  html = html.replace(/\*(.+?)\*/g, "<em>$1</em>");
+  html = html.replace(/(?<!\*)\*(?!\*)(.+?)(?<!\*)\*(?!\*)/g, "<em>$1</em>");
+  html = html.replace(/^### (.+)$/gm, "<h3>$1</h3>");
+  html = html.replace(/^## (.+)$/gm, "<h2>$1</h2>");
+  html = html.replace(/^# (.+)$/gm, "<h1>$1</h1>");
+  html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank">$1</a>');
+  html = html.replace(/^\s*[-*] (.+)$/gm, "<li>$1</li>");
+  html = html.replace(/(<li>.*<\/li>)/s, "<ul>$1</ul>");
+  html = html.replace(/^\s*\d+\. (.+)$/gm, "<li>$1</li>");
   html = html.replace(/\n/g, "<br>");
+
   return html;
 }
