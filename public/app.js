@@ -128,14 +128,15 @@ async function sendMessage() {
 
   await loadChats();
 
-  const typingEl = addTyping();
+  const historySnap = await getDocs(collection(db, "chats", currentChatId, "messages"));
+  const history = [];
+  historySnap.forEach((d) => history.push(d.data()));
+  history.sort((a, b) => (a.timestamp?.seconds || 0) - (b.timestamp?.seconds || 0));
+
+  const aiMsgEl = addStreamingMessage();
+  let fullText = "";
 
   try {
-    const historySnap = await getDocs(collection(db, "chats", currentChatId, "messages"));
-    const history = [];
-    historySnap.forEach((d) => history.push(d.data()));
-    history.sort((a, b) => (a.timestamp?.seconds || 0) - (b.timestamp?.seconds || 0));
-
     const response = await fetch("/api/chat", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -145,25 +146,41 @@ async function sendMessage() {
       })
     });
 
-    const data = await response.json();
-    if (!response.ok) throw new Error(data.error?.message || "API hatası");
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = "";
 
-    const aiText = data.candidates?.[0]?.content?.parts?.[0]?.text;
-    if (!aiText) throw new Error("Boş yanıt");
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split("\n");
+      buffer = lines.pop();
 
-    typingEl.remove();
-    addMessage("ai", aiText);
+      for (const line of lines) {
+        if (line.startsWith("data: ")) {
+          const data = line.slice(6).trim();
+          if (data === "[DONE]") continue;
+          try {
+            const parsed = JSON.parse(data);
+            if (parsed.text) {
+              fullText += parsed.text;
+              updateStreamingMessage(aiMsgEl, fullText);
+            }
+          } catch (e) {}
+        }
+      }
+    }
 
     await addDoc(collection(db, "chats", currentChatId, "messages"), {
       role: "ai",
-      text: aiText,
+      text: fullText,
       timestamp: serverTimestamp()
     });
 
     await loadChats();
   } catch (err) {
-    typingEl.remove();
-    addMessage("ai", "Hata: " + err.message);
+    updateStreamingMessage(aiMsgEl, "Hata: " + err.message);
   }
 }
 
@@ -176,8 +193,32 @@ async function generateTitle(chatId, firstMessage) {
         message: `Bu sohbet için 3-5 kelimelik kısa bir başlık üret. Sadece başlığı yaz, başka hiçbir şey yazma. Mesaj: "${firstMessage}"`
       })
     });
-    const data = await response.json();
-    const title = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
+
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let fullText = "";
+    let buffer = "";
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split("\n");
+      buffer = lines.pop();
+
+      for (const line of lines) {
+        if (line.startsWith("data: ")) {
+          const data = line.slice(6).trim();
+          if (data === "[DONE]") continue;
+          try {
+            const parsed = JSON.parse(data);
+            if (parsed.text) fullText += parsed.text;
+          } catch (e) {}
+        }
+      }
+    }
+
+    const title = fullText.trim();
     if (title) {
       await updateDoc(doc(db, "chats", chatId), { title: title.slice(0, 60) });
       await loadChats();
@@ -203,16 +244,21 @@ function addMessage(role, text) {
   return msg;
 }
 
-function addTyping() {
-  const el = document.createElement("div");
-  el.className = "chat__msg chat__msg--ai";
-  el.innerHTML = `
+function addStreamingMessage() {
+  const msg = document.createElement("div");
+  msg.className = "chat__msg chat__msg--ai";
+  msg.innerHTML = `
     <div class="chat__avatar chat__avatar--ai"><i class='bx bxs-star'></i></div>
-    <div class="chat__typing"><span></span><span></span><span></span></div>
+    <div class="chat__bubble"></div>
   `;
-  chat.appendChild(el);
+  chat.appendChild(msg);
+  msg.scrollIntoView({ behavior: "smooth", block: "end" });
+  return msg.querySelector(".chat__bubble");
+}
+
+function updateStreamingMessage(el, text) {
+  el.innerHTML = formatText(text);
   el.scrollIntoView({ behavior: "smooth", block: "end" });
-  return el;
 }
 
 function escapeHtml(str) {
