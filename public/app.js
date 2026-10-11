@@ -18,7 +18,7 @@ const userName = document.getElementById("userName");
 const userAvatar = document.getElementById("userAvatar");
 const main = document.querySelector(".main");
 
-const LOGO = "google-gemini-icon.png";
+const LOGO = "https://i.imgur.com/viQJmJY.png";
 
 const SHIMMER_HTML = `
   <div class="loader">
@@ -30,6 +30,16 @@ const SHIMMER_HTML = `
 
 let currentUser = null;
 let currentChatId = null;
+let autoScroll = true;
+
+main.addEventListener("scroll", () => {
+  const nearBottom = main.scrollHeight - main.scrollTop - main.clientHeight < 80;
+  autoScroll = nearBottom;
+});
+
+function scrollToBottom() {
+  if (autoScroll) main.scrollTop = main.scrollHeight;
+}
 
 onAuthStateChanged(auth, async (user) => {
   if (!user) {
@@ -123,6 +133,7 @@ async function sendMessage() {
   welcome.classList.add("hidden");
   promptInput.value = "";
   sendBtn.classList.remove("visible");
+  autoScroll = true;
   addMessage("user", text);
 
   if (!currentChatId) {
@@ -264,7 +275,7 @@ function addMessage(role, text) {
     `;
   }
   chat.appendChild(msg);
-  if (main) main.scrollTop = main.scrollHeight;
+  scrollToBottom();
   return msg;
 }
 
@@ -276,13 +287,14 @@ function addStreamingMessage() {
     <div class="chat__bubble">${SHIMMER_HTML}</div>
   `;
   chat.appendChild(msg);
-  if (main) main.scrollTop = main.scrollHeight;
+  autoScroll = true;
+  scrollToBottom();
   return msg.querySelector(".chat__bubble");
 }
 
 function updateStreamingMessage(el, text) {
   el.innerHTML = formatText(text);
-  if (main) main.scrollTop = main.scrollHeight;
+  scrollToBottom();
 }
 
 function escapeHtml(str) {
@@ -340,7 +352,7 @@ function formatText(text) {
   html = html.replace(/(<li>.*<\/li>)/s, "<ul>$1</ul>");
   html = html.replace(/^\s*\d+\. (.+)$/gm, "<li>$1</li>");
 
-  // Satır sonları (tablo ve pre dışında)
+  // Satır sonları
   html = html.replace(/\n/g, "<br>");
   html = html.replace(/<\/table><br>/g, "</table>");
   html = html.replace(/<br><table>/g, "<table>");
