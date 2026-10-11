@@ -39,23 +39,49 @@ app.post("/api/chat", async (req, res) => {
       },
       body: JSON.stringify({
         model: "apodex/apodex-1.1-mini:free",
-        messages: messages
+        messages: messages,
+        stream: true
       }),
     });
 
-    const data = await response.json();
     if (!response.ok) {
-      return res.status(response.status).json({ error: data.error?.message || "API hatası" });
+      const errData = await response.json();
+      return res.status(response.status).json({ error: errData.error?.message || "API hatası" });
     }
 
-    const text = data.choices?.[0]?.message?.content || "";
-    res.json({
-      candidates: [{
-        content: {
-          parts: [{ text }]
+    res.setHeader("Content-Type", "text/event-stream");
+    res.setHeader("Cache-Control", "no-cache");
+    res.setHeader("Connection", "keep-alive");
+
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = "";
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split("\n");
+      buffer = lines.pop();
+
+      for (const line of lines) {
+        if (line.startsWith("data: ")) {
+          const data = line.slice(6).trim();
+          if (data === "[DONE]") {
+            res.write("data: [DONE]\n\n");
+            continue;
+          }
+          try {
+            const parsed = JSON.parse(data);
+            const delta = parsed.choices?.[0]?.delta?.content;
+            if (delta) {
+              res.write(`data: ${JSON.stringify({ text: delta })}\n\n`);
+            }
+          } catch (e) {}
         }
-      }]
-    });
+      }
+    }
+    res.end();
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
