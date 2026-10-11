@@ -62,9 +62,8 @@ backBtn.addEventListener("click", () => {
 
 async function loadData() {
   const usersSnap = await getDocs(collection(db, "users"));
-  allUsers = [];
-  usersSnap.forEach((d) => allUsers.push({ uid: d.id, ...d.data() }));
-  statUsers.textContent = allUsers.length;
+  const usersMap = {};
+  usersSnap.forEach((d) => usersMap[d.id] = { uid: d.id, ...d.data() });
 
   const chatsSnap = await getDocs(collection(db, "chats"));
   allChats = [];
@@ -78,6 +77,15 @@ async function loadData() {
     msgCount += chatData.messages.length;
     allChats.push(chatData);
   }
+
+  allChats.forEach((c) => {
+    if (!usersMap[c.uid]) {
+      usersMap[c.uid] = { uid: c.uid, email: c.uid, role: "user" };
+    }
+  });
+
+  allUsers = Object.values(usersMap);
+  statUsers.textContent = allUsers.length;
   statChats.textContent = allChats.length;
   statMessages.textContent = msgCount;
 
