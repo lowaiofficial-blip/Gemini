@@ -32,7 +32,7 @@ toggleLink.addEventListener("click", (e) => {
   authError.textContent = "";
 });
 
-async function saveUser(user) {
+async function ensureUserDoc(user) {
   const ref = doc(db, "users", user.uid);
   const snap = await getDoc(ref);
   if (!snap.exists()) {
@@ -49,7 +49,7 @@ async function saveUser(user) {
 googleBtn.addEventListener("click", async () => {
   try {
     const result = await signInWithPopup(auth, googleProvider);
-    await saveUser(result.user);
+    await ensureUserDoc(result.user);
   } catch (err) {
     authError.textContent = err.message;
   }
@@ -69,9 +69,10 @@ submitBtn.addEventListener("click", async () => {
     if (isRegister) {
       const result = await createUserWithEmailAndPassword(auth, email, password);
       await updateProfile(result.user, { displayName: email.split("@")[0] });
-      await saveUser(result.user);
+      await ensureUserDoc(result.user);
     } else {
-      await signInWithEmailAndPassword(auth, email, password);
+      const result = await signInWithEmailAndPassword(auth, email, password);
+      await ensureUserDoc(result.user);
     }
   } catch (err) {
     authError.textContent = err.message;
@@ -80,6 +81,6 @@ submitBtn.addEventListener("click", async () => {
 
 onAuthStateChanged(auth, (user) => {
   if (user) {
-    window.location.href = "app.html";
+    window.location.href = "/app";
   }
 });
