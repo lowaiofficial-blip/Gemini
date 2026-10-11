@@ -10,23 +10,34 @@
 <body class="admin-body">
 
   <header class="admin-header">
-    <h1>Gemini Admin</h1>
+    <div class="admin-header__left">
+      <button id="backBtn" class="admin-back hide"><i class='bx bx-arrow-back'></i></button>
+      <h1 id="adminTitle">Gemini Admin</h1>
+    </div>
     <button id="adminLogout" class="admin-logout">Çıkış</button>
   </header>
 
   <main class="admin-main">
-    <div class="admin-filters">
-      <input type="text" id="filterUser" placeholder="Kullanıcı emailine göre filtrele" />
-      <input type="text" id="filterText" placeholder="Mesaj içeriğinde ara" />
+
+    <div id="viewUsers" class="admin-view">
+      <input type="text" id="filterUser" class="admin-search" placeholder="Email ile ara" />
+      <div class="admin-stats">
+        <div class="admin-stat"><span id="statUsers">0</span><label>Kullanıcı</label></div>
+        <div class="admin-stat"><span id="statChats">0</span><label>Sohbet</label></div>
+        <div class="admin-stat"><span id="statMessages">0</span><label>Mesaj</label></div>
+      </div>
+      <div id="userList" class="admin-list"></div>
     </div>
 
-    <div class="admin-stats">
-      <div class="admin-stat"><span id="statUsers">0</span><label>Kullanıcı</label></div>
-      <div class="admin-stat"><span id="statChats">0</span><label>Sohbet</label></div>
-      <div class="admin-stat"><span id="statMessages">0</span><label>Mesaj</label></div>
+    <div id="viewChats" class="admin-view hide">
+      <input type="text" id="filterText" class="admin-search" placeholder="Başlıkta ara" />
+      <div id="chatList" class="admin-list"></div>
     </div>
 
-    <div class="admin-chats" id="adminChats"></div>
+    <div id="viewMessages" class="admin-view hide">
+      <div id="messageList" class="admin-list"></div>
+    </div>
+
   </main>
 
   <script type="module" src="admin.js"></script>
