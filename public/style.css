@@ -318,17 +318,20 @@ body {
 }
 
 .chat__msg--ai {
-  display: grid;
-  grid-template-columns: 32px 1fr;
-  gap: 16px;
-  align-items: start;
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 12px;
 }
 .chat__msg--ai .chat__avatar {
-  margin-top: 4px;
+  flex-shrink: 0;
+  margin-top: 2px;
 }
 .chat__msg--ai .chat__bubble {
   padding: 0;
   min-width: 0;
+  flex: 1;
+  margin-top: 0;
 }
 
 .chat__avatar {
