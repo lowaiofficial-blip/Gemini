@@ -190,11 +190,10 @@ body {
   font-size: 0.9rem;
 }
 .sidebar__recent-item:hover { background: var(--hover); }
-.sidebar__recent-item.active { background: var(--hover); }
-.sidebar__recent-item span {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+.sidebar__recent-item.active {
+  background: var(--hover);
+  color: var(--accent);
+  font-weight: 500;
 }
 .sidebar__bottom {
   margin-top: auto;
