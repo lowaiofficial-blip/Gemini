@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Gemini</title>
+  <link rel="stylesheet" href="style.css" />
+  <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet" />
+</head>
+<body class="app-body">
+
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar__top">
+      <button class="sidebar__close" id="sidebarClose"><i class='bx bx-x'></i></button>
+      <div class="sidebar__logo"><i class='bx bxs-star'></i><span>Gemini</span></div>
+    </div>
+    <button class="sidebar__new" id="newChatBtn"><i class='bx bx-edit'></i><span>Yeni sohbet</span></button>
+    <div class="sidebar__section">
+      <span class="sidebar__section-title">Sohbetler</span>
+      <div class="sidebar__recent" id="chatList"></div>
+    </div>
+    <div class="sidebar__bottom">
+      <div class="sidebar__profile">
+        <div class="sidebar__avatar" id="userAvatar"></div>
+        <span id="userName">Kullanıcı</span>
+        <button class="sidebar__logout" id="logoutBtn"><i class='bx bx-log-out'></i></button>
+      </div>
+    </div>
+  </aside>
+
+  <header class="topbar">
+    <button class="topbar__menu" id="menuBtn"><i class='bx bx-menu'></i></button>
+    <div class="topbar__title">
+      <span>Gemini</span>
+      <span class="topbar__model">3.8 Flash</span>
+    </div>
+    <div class="topbar__right">
+      <button class="topbar__icon" id="themeBtn"><i class='bx bx-sun'></i></button>
+    </div>
+  </header>
+
+  <main class="main">
+    <section class="welcome" id="welcome">
+      <div class="welcome__star"><i class='bx bxs-star'></i></div>
+      <h1 class="welcome__title">Sıra sizde</h1>
+    </section>
+    <section class="chat" id="chat"></section>
+  </main>
+
+  <footer class="prompt">
+    <div class="prompt__box">
+      <input type="text" class="prompt__input" id="promptInput" placeholder="Gemini'a sorun" />
+      <button class="prompt__send" id="sendBtn"><i class='bx bx-send'></i></button>
+    </div>
+    <p class="prompt__note">Gemini hatalı bilgiler gösterebilir, bu nedenle yanıtlarını iki kez kontrol edin.</p>
+  </footer>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>
