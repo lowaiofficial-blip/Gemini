@@ -18,6 +18,16 @@ const userName = document.getElementById("userName");
 const userAvatar = document.getElementById("userAvatar");
 const main = document.querySelector(".main");
 
+const LOGO = "google-gemini-icon.png";
+
+const SHIMMER_HTML = `
+  <div class="loader">
+    <div class="bar"></div>
+    <div class="bar"></div>
+    <div class="bar"></div>
+  </div>
+`;
+
 let currentUser = null;
 let currentChatId = null;
 
@@ -154,6 +164,7 @@ async function sendMessage() {
     const reader = response.body.getReader();
     const decoder = new TextDecoder();
     let buffer = "";
+    let started = false;
 
     while (true) {
       const { done, value } = await reader.read();
@@ -169,6 +180,11 @@ async function sendMessage() {
           try {
             const parsed = JSON.parse(data);
             if (parsed.text) {
+              if (!started) {
+                started = true;
+                aiMsgEl.classList.add("caret");
+                aiMsgEl.innerHTML = "";
+              }
               fullText += parsed.text;
               updateStreamingMessage(aiMsgEl, fullText);
             }
@@ -176,6 +192,8 @@ async function sendMessage() {
         }
       }
     }
+
+    aiMsgEl.classList.remove("caret");
 
     await addDoc(collection(db, "chats", currentChatId, "messages"), {
       role: "ai",
@@ -185,6 +203,7 @@ async function sendMessage() {
 
     await loadChats();
   } catch (err) {
+    aiMsgEl.classList.remove("caret");
     updateStreamingMessage(aiMsgEl, "Hata: " + err.message);
   }
 }
@@ -240,7 +259,7 @@ function addMessage(role, text) {
     msg.innerHTML = `<div class="chat__bubble">${escapeHtml(text)}</div>`;
   } else {
     msg.innerHTML = `
-      <div class="chat__avatar chat__avatar--ai"><i class='bx bxs-star'></i></div>
+      <div class="chat__avatar chat__avatar--ai"><img src="${LOGO}" alt="Gemini" class="chat-logo"></div>
       <div class="chat__bubble">${formatText(text)}</div>
     `;
   }
@@ -253,8 +272,8 @@ function addStreamingMessage() {
   const msg = document.createElement("div");
   msg.className = "chat__msg chat__msg--ai";
   msg.innerHTML = `
-    <div class="chat__avatar chat__avatar--ai"><i class='bx bxs-star'></i></div>
-    <div class="chat__bubble"></div>
+    <div class="chat__avatar chat__avatar--ai"><img src="${LOGO}" alt="Gemini" class="chat-logo"></div>
+    <div class="chat__bubble">${SHIMMER_HTML}</div>
   `;
   chat.appendChild(msg);
   if (main) main.scrollTop = main.scrollHeight;
@@ -275,18 +294,58 @@ function escapeHtml(str) {
 function formatText(text) {
   let html = escapeHtml(text);
 
+  // Kod blokları
   html = html.replace(/```([\s\S]*?)```/g, "<pre><code>$1</code></pre>");
+
+  // Tablolar
+  html = html.replace(/((?:^\|.+\|\s*$\n?)+)/gm, (tableBlock) => {
+    const lines = tableBlock.trim().split("\n").filter(l => l.trim());
+    if (lines.length < 2) return tableBlock;
+    const headerLine = lines[0];
+    const separatorLine = lines[1];
+    if (!/^\|[\s\-:|]+\|$/.test(separatorLine.trim())) return tableBlock;
+
+    const headers = headerLine.split("|").slice(1, -1).map(h => h.trim());
+    const rows = lines.slice(2).map(l => l.split("|").slice(1, -1).map(c => c.trim()));
+
+    let table = "<table><thead><tr>";
+    headers.forEach(h => table += `<th>${h}</th>`);
+    table += "</tr></thead><tbody>";
+    rows.forEach(row => {
+      table += "<tr>";
+      row.forEach(c => table += `<td>${c}</td>`);
+      table += "</tr>";
+    });
+    table += "</tbody></table>";
+    return table;
+  });
+
+  // Satır içi kod
   html = html.replace(/`([^`]+)`/g, "<code>$1</code>");
+
+  // Bold / italic
   html = html.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
   html = html.replace(/(?<!\*)\*(?!\*)(.+?)(?<!\*)\*(?!\*)/g, "<em>$1</em>");
+
+  // Başlıklar
   html = html.replace(/^### (.+)$/gm, "<h3>$1</h3>");
   html = html.replace(/^## (.+)$/gm, "<h2>$1</h2>");
   html = html.replace(/^# (.+)$/gm, "<h1>$1</h1>");
+
+  // Linkler
   html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank">$1</a>');
+
+  // Listeler
   html = html.replace(/^\s*[-*] (.+)$/gm, "<li>$1</li>");
   html = html.replace(/(<li>.*<\/li>)/s, "<ul>$1</ul>");
   html = html.replace(/^\s*\d+\. (.+)$/gm, "<li>$1</li>");
+
+  // Satır sonları (tablo ve pre dışında)
   html = html.replace(/\n/g, "<br>");
+  html = html.replace(/<\/table><br>/g, "</table>");
+  html = html.replace(/<br><table>/g, "<table>");
+  html = html.replace(/<\/pre><br>/g, "</pre>");
+  html = html.replace(/<br><pre>/g, "<pre>");
 
   return html;
 }
