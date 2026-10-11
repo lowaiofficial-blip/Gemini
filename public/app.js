@@ -16,6 +16,7 @@ const logoutBtn = document.getElementById("logoutBtn");
 const chatList = document.getElementById("chatList");
 const userName = document.getElementById("userName");
 const userAvatar = document.getElementById("userAvatar");
+const main = document.querySelector(".main");
 
 let currentUser = null;
 let currentChatId = null;
@@ -244,7 +245,7 @@ function addMessage(role, text) {
     `;
   }
   chat.appendChild(msg);
-  msg.scrollIntoView({ behavior: "smooth", block: "end" });
+  if (main) main.scrollTop = main.scrollHeight;
   return msg;
 }
 
@@ -256,13 +257,13 @@ function addStreamingMessage() {
     <div class="chat__bubble"></div>
   `;
   chat.appendChild(msg);
-  msg.scrollIntoView({ behavior: "smooth", block: "end" });
+  if (main) main.scrollTop = main.scrollHeight;
   return msg.querySelector(".chat__bubble");
 }
 
 function updateStreamingMessage(el, text) {
   el.innerHTML = formatText(text);
-  el.scrollIntoView({ behavior: "smooth", block: "end" });
+  if (main) main.scrollTop = main.scrollHeight;
 }
 
 function escapeHtml(str) {
