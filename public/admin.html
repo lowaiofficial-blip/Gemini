@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Gemini — Admin</title>
+  <link rel="stylesheet" href="style.css" />
+  <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet" />
+</head>
+<body class="admin-body">
+
+  <header class="admin-header">
+    <h1>Gemini Admin</h1>
+    <button id="adminLogout" class="admin-logout">Çıkış</button>
+  </header>
+
+  <main class="admin-main">
+    <div class="admin-filters">
+      <input type="text" id="filterUser" placeholder="Kullanıcı emailine göre filtrele" />
+      <input type="text" id="filterText" placeholder="Mesaj içeriğinde ara" />
+    </div>
+
+    <div class="admin-stats">
+      <div class="admin-stat"><span id="statUsers">0</span><label>Kullanıcı</label></div>
+      <div class="admin-stat"><span id="statChats">0</span><label>Sohbet</label></div>
+      <div class="admin-stat"><span id="statMessages">0</span><label>Mesaj</label></div>
+    </div>
+
+    <div class="admin-chats" id="adminChats"></div>
+  </main>
+
+  <script type="module" src="admin.js"></script>
+</body>
+</html>
