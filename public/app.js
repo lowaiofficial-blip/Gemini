@@ -6,6 +6,7 @@ import {
 
 const chat = document.getElementById("chat");
 const welcome = document.getElementById("welcome");
+const welcomeTitle = document.getElementById("welcomeTitle");
 const promptInput = document.getElementById("promptInput");
 const sendBtn = document.getElementById("sendBtn");
 const sidebar = document.getElementById("sidebar");
@@ -47,10 +48,12 @@ onAuthStateChanged(auth, async (user) => {
     return;
   }
   currentUser = user;
-  userName.textContent = user.displayName || user.email;
+  const displayName = user.displayName || user.email.split("@")[0];
+  userName.textContent = displayName;
   if (user.photoURL) {
     userAvatar.style.backgroundImage = `url(${user.photoURL})`;
   }
+  welcomeTitle.textContent = `Merhaba, ${displayName}!`;
   await loadChats();
   promptInput.focus();
 });
@@ -306,10 +309,8 @@ function escapeHtml(str) {
 function formatText(text) {
   let html = escapeHtml(text);
 
-  // Kod blokları
   html = html.replace(/```([\s\S]*?)```/g, "<pre><code>$1</code></pre>");
 
-  // Tablolar
   html = html.replace(/((?:^\|.+\|\s*$\n?)+)/gm, (tableBlock) => {
     const lines = tableBlock.trim().split("\n").filter(l => l.trim());
     if (lines.length < 2) return tableBlock;
@@ -332,27 +333,20 @@ function formatText(text) {
     return table;
   });
 
-  // Satır içi kod
   html = html.replace(/`([^`]+)`/g, "<code>$1</code>");
-
-  // Bold / italic
   html = html.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
   html = html.replace(/(?<!\*)\*(?!\*)(.+?)(?<!\*)\*(?!\*)/g, "<em>$1</em>");
 
-  // Başlıklar
   html = html.replace(/^### (.+)$/gm, "<h3>$1</h3>");
   html = html.replace(/^## (.+)$/gm, "<h2>$1</h2>");
   html = html.replace(/^# (.+)$/gm, "<h1>$1</h1>");
 
-  // Linkler
   html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank">$1</a>');
 
-  // Listeler
   html = html.replace(/^\s*[-*] (.+)$/gm, "<li>$1</li>");
   html = html.replace(/(<li>.*<\/li>)/s, "<ul>$1</ul>");
   html = html.replace(/^\s*\d+\. (.+)$/gm, "<li>$1</li>");
 
-  // Satır sonları
   html = html.replace(/\n/g, "<br>");
   html = html.replace(/<\/table><br>/g, "</table>");
   html = html.replace(/<br><table>/g, "<table>");
