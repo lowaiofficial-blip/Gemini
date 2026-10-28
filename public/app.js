@@ -1,7 +1,7 @@
 import { auth, db } from "./firebase.js";
 import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import {
-  collection, addDoc, getDocs, doc, getDoc, setDoc, query, where, serverTimestamp, updateDoc
+  collection, addDoc, getDocs, doc, query, where, serverTimestamp, updateDoc
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const chat = document.getElementById("chat");
@@ -18,24 +18,23 @@ const chatList = document.getElementById("chatList");
 const userName = document.getElementById("userName");
 const userAvatar = document.getElementById("userAvatar");
 const main = document.querySelector(".main");
+const modelSelector = document.getElementById("modelSelector");
 
 const LOGO = "https://i.imgur.com/viQJmJY.png";
 
 const SHIMMER_HTML = `
   <div class="loader">
-    <div class="bar"></div>
-    <div class="bar"></div>
-    <div class="bar"></div>
+    <div class="bar"></div><div class="bar"></div><div class="bar"></div>
   </div>
 `;
 
 let currentUser = null;
 let currentChatId = null;
 let autoScroll = true;
+let isImageMode = false; // Görsel modu açık/kapalı
 
 main.addEventListener("scroll", () => {
-  const nearBottom = main.scrollHeight - main.scrollTop - main.clientHeight < 80;
-  autoScroll = nearBottom;
+  autoScroll = main.scrollHeight - main.scrollTop - main.clientHeight < 80;
 });
 
 function scrollToBottom() {
@@ -43,19 +42,28 @@ function scrollToBottom() {
 }
 
 onAuthStateChanged(auth, async (user) => {
-  if (!user) {
-    window.location.href = "/login";
-    return;
-  }
+  if (!user) { window.location.href = "/login"; return; }
   currentUser = user;
   const displayName = user.displayName || user.email.split("@")[0];
   userName.textContent = displayName;
-  if (user.photoURL) {
-    userAvatar.style.backgroundImage = `url(${user.photoURL})`;
-  }
+  if (user.photoURL) userAvatar.style.backgroundImage = `url(${user.photoURL})`;
   welcomeTitle.textContent = `Merhaba, ${displayName}!`;
   await loadChats();
   promptInput.focus();
+});
+
+// Model değiştirici (Sohbet / Görsel)
+modelSelector.addEventListener("click", () => {
+  isImageMode = !isImageMode;
+  if (isImageMode) {
+    modelSelector.innerHTML = `Görsel Oluşturma <i class='bx bx-image-alt'></i>`;
+    modelSelector.style.color = "#a8c7fa";
+    promptInput.placeholder = "Nasıl bir görsel oluşturmamı istersin? (Örn: Uzayda kahve içen bir astronot)";
+  } else {
+    modelSelector.innerHTML = `3.5 Flash Lite <i class='bx bx-chevron-down'></i>`;
+    modelSelector.style.color = "var(--text-dim)";
+    promptInput.placeholder = "Gemini'a sorun...";
+  }
 });
 
 menuBtn.addEventListener("click", () => sidebar.classList.add("open"));
@@ -83,18 +91,23 @@ promptInput.addEventListener("input", () => {
 promptInput.addEventListener("keydown", (e) => {
   if (e.key === "Enter" && !e.shiftKey) {
     e.preventDefault();
-    sendMessage();
+    handleSend();
   }
 });
 
-sendBtn.addEventListener("click", sendMessage);
+sendBtn.addEventListener("click", handleSend);
+
+async function handleSend() {
+  if (isImageMode) {
+    await generateImage();
+  } else {
+    await sendMessage();
+  }
+}
 
 async function loadChats() {
   chatList.innerHTML = "";
-  const q = query(
-    collection(db, "chats"),
-    where("uid", "==", currentUser.uid)
-  );
+  const q = query(collection(db, "chats"), where("uid", "==", currentUser.uid));
   const snap = await getDocs(q);
   const chats = [];
   snap.forEach((d) => chats.push({ id: d.id, ...d.data() }));
@@ -111,10 +124,7 @@ async function loadChats() {
 }
 
 async function loadChat(chatId) {
-  if (currentChatId === chatId) {
-    sidebar.classList.remove("open");
-    return;
-  }
+  if (currentChatId === chatId) { sidebar.classList.remove("open"); return; }
   currentChatId = chatId;
   chat.innerHTML = "";
   welcome.classList.add("hidden");
@@ -125,11 +135,12 @@ async function loadChat(chatId) {
   msgSnap.forEach((d) => msgs.push(d.data()));
   msgs.sort((a, b) => (a.timestamp?.seconds || 0) - (b.timestamp?.seconds || 0));
 
-  msgs.forEach((m) => addMessage(m.role, m.text));
+  msgs.forEach((m) => addMessage(m.role, m.text, m.imageUrl));
   sidebar.classList.remove("open");
 }
 
-async function sendMessage() {
+// --- GÖRSEL OLUŞTURMA ---
+async function generateImage() {
   const text = promptInput.value.trim();
   if (!text || !currentUser) return;
 
@@ -157,6 +168,66 @@ async function sendMessage() {
 
   await loadChats();
 
+  const aiMsgEl = addStreamingMessage();
+  aiMsgEl.innerHTML = SHIMMER_HTML;
+
+  try {
+    const response = await fetch("/api/imagine", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ prompt: text })
+    });
+
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || "Görsel oluşturulamadı");
+
+    // Görseli ve metni bas
+    aiMsgEl.innerHTML = `
+      ${data.text ? `<p>${formatText(data.text)}</p>` : ''}
+      <img src="${data.image}" class="generated-image" alt="Oluşturulan Görsel" />
+    `;
+    scrollToBottom();
+
+    await addDoc(collection(db, "chats", currentChatId, "messages"), {
+      role: "ai",
+      text: data.text || "İşte oluşturduğum görsel:",
+      imageUrl: data.image,
+      timestamp: serverTimestamp()
+    });
+    await loadChats();
+
+  } catch (err) {
+    updateStreamingMessage(aiMsgEl, "Hata: " + err.message);
+  }
+}
+
+// --- METİN SOHBETİ ---
+async function sendMessage() {
+  const text = promptInput.value.trim();
+  if (!text || !currentUser) return;
+
+  welcome.classList.add("hidden");
+  promptInput.value = "";
+  sendBtn.classList.remove("visible");
+  autoScroll = true;
+  addMessage("user", text);
+
+  if (!currentChatId) {
+    const docRef = await addDoc(collection(db, "chats"), {
+      uid: currentUser.uid,
+      title: text.slice(0, 40),
+      createdAt: serverTimestamp()
+    });
+    currentChatId = docRef.id;
+    generateTitle(currentChatId, text);
+  }
+
+  await addDoc(collection(db, "chats", currentChatId, "messages"), {
+    role: "user", text, timestamp: serverTimestamp()
+  });
+
+  await loadChats();
+
   const historySnap = await getDocs(collection(db, "chats", currentChatId, "messages"));
   const history = [];
   historySnap.forEach((d) => history.push(d.data()));
@@ -169,10 +240,7 @@ async function sendMessage() {
     const response = await fetch("/api/chat", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        message: text,
-        history: history.slice(0, -1)
-      })
+      body: JSON.stringify({ message: text, history: history.slice(0, -1) })
     });
 
     const reader = response.body.getReader();
@@ -210,12 +278,10 @@ async function sendMessage() {
     aiMsgEl.classList.remove("caret");
 
     await addDoc(collection(db, "chats", currentChatId, "messages"), {
-      role: "ai",
-      text: fullText,
-      timestamp: serverTimestamp()
+      role: "ai", text: fullText, timestamp: serverTimestamp()
     });
-
     await loadChats();
+
   } catch (err) {
     aiMsgEl.classList.remove("caret");
     updateStreamingMessage(aiMsgEl, "Hata: " + err.message);
@@ -231,7 +297,6 @@ async function generateTitle(chatId, firstMessage) {
         message: `Bu sohbet için 3-5 kelimelik kısa bir başlık üret. Sadece başlığı yaz, başka hiçbir şey yazma. Mesaj: "${firstMessage}"`
       })
     });
-
     const reader = response.body.getReader();
     const decoder = new TextDecoder();
     let fullText = "";
@@ -261,20 +326,22 @@ async function generateTitle(chatId, firstMessage) {
       await updateDoc(doc(db, "chats", chatId), { title: title.slice(0, 60) });
       await loadChats();
     }
-  } catch (e) {
-    console.error("Başlık üretilemedi", e);
-  }
+  } catch (e) {}
 }
 
-function addMessage(role, text) {
+function addMessage(role, text, imageUrl = null) {
   const msg = document.createElement("div");
   msg.className = `chat__msg chat__msg--${role === "user" ? "user" : "ai"}`;
   if (role === "user") {
     msg.innerHTML = `<div class="chat__bubble">${escapeHtml(text)}</div>`;
   } else {
+    let html = formatText(text);
+    if (imageUrl) {
+      html += `<br><img src="${imageUrl}" class="generated-image" alt="Görsel" />`;
+    }
     msg.innerHTML = `
       <div class="chat__avatar chat__avatar--ai"><img src="${LOGO}" alt="Gemini" class="chat-logo"></div>
-      <div class="chat__bubble">${formatText(text)}</div>
+      <div class="chat__bubble">${html}</div>
     `;
   }
   chat.appendChild(msg);
@@ -309,8 +376,22 @@ function escapeHtml(str) {
 function formatText(text) {
   let html = escapeHtml(text);
 
-  html = html.replace(/```([\s\S]*?)```/g, "<pre><code>$1</code></pre>");
+  // KOD BLOKLARI VE KOPYALAMA BUTONU
+  html = html.replace(/```([\s\S]*?)```/g, (match, code) => {
+    const cleanCode = code.replace(/^[a-zA-Z0-9]+\n/, ''); // dil etiketini temizle
+    const escapedCode = escapeHtml(cleanCode.trim());
+    return `
+      <div class="code-block-wrapper">
+        <div class="code-block-header">
+          <span>Kod</span>
+          <button class="copy-code-btn" onclick="copyCode(this)"><i class='bx bx-copy'></i> Kopyala</button>
+        </div>
+        <pre><code>${escapedCode}</code></pre>
+      </div>
+    `;
+  });
 
+  // Tablolar
   html = html.replace(/((?:^\|.+\|\s*$\n?)+)/gm, (tableBlock) => {
     const lines = tableBlock.trim().split("\n").filter(l => l.trim());
     if (lines.length < 2) return tableBlock;
@@ -336,13 +417,10 @@ function formatText(text) {
   html = html.replace(/`([^`]+)`/g, "<code>$1</code>");
   html = html.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
   html = html.replace(/(?<!\*)\*(?!\*)(.+?)(?<!\*)\*(?!\*)/g, "<em>$1</em>");
-
   html = html.replace(/^### (.+)$/gm, "<h3>$1</h3>");
   html = html.replace(/^## (.+)$/gm, "<h2>$1</h2>");
   html = html.replace(/^# (.+)$/gm, "<h1>$1</h1>");
-
   html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank">$1</a>');
-
   html = html.replace(/^\s*[-*] (.+)$/gm, "<li>$1</li>");
   html = html.replace(/(<li>.*<\/li>)/s, "<ul>$1</ul>");
   html = html.replace(/^\s*\d+\. (.+)$/gm, "<li>$1</li>");
@@ -352,6 +430,17 @@ function formatText(text) {
   html = html.replace(/<br><table>/g, "<table>");
   html = html.replace(/<\/pre><br>/g, "</pre>");
   html = html.replace(/<br><pre>/g, "<pre>");
+  html = html.replace(/<\/div><br>/g, "</div>");
+  html = html.replace(/<br><div class="code-block-wrapper">/g, '<div class="code-block-wrapper">');
 
   return html;
 }
+
+// Global kopyalama fonksiyonu
+window.copyCode = function(btn) {
+  const code = btn.closest('.code-block-wrapper').querySelector('code').innerText;
+  navigator.clipboard.writeText(code).then(() => {
+    btn.innerHTML = `<i class='bx bx-check'></i> Kopyalandı`;
+    setTimeout(() => { btn.innerHTML = `<i class='bx bx-copy'></i> Kopyala`; }, 2000);
+  });
+};
