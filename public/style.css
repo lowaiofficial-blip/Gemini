@@ -684,6 +684,107 @@ body {
 .admin-msg b { font-size: 0.8rem; color: var(--text-dim); }
 .admin-msg p { margin-top: 4px; white-space: pre-wrap; }
 
+/* ADMIN FAVICON */
+.admin-favicon-box {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 20px;
+  background: var(--sidebar-bg);
+  border-radius: 12px;
+  margin-bottom: 20px;
+}
+.admin-favicon-current {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: var(--input-bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.admin-favicon-current img {
+  width: 36px;
+  height: 36px;
+  object-fit: contain;
+  transition: opacity 0.3s;
+}
+.admin-favicon-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+}
+.admin-favicon-info strong {
+  font-size: 0.95rem;
+  color: var(--text);
+}
+.admin-favicon-info span {
+  font-size: 0.8rem;
+  color: var(--text-dim);
+}
+.admin-favicon-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  background: #1a73e8;
+  color: #fff;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background 0.2s;
+}
+.admin-favicon-btn:hover { background: #1557b0; }
+
+/* KOD BLOĞU KOPYALAMA */
+.code-block-wrapper {
+  background: var(--sidebar-bg);
+  border-radius: 8px;
+  overflow: hidden;
+  margin: 12px 0;
+  border: 1px solid var(--input-border);
+}
+.code-block-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 14px;
+  background: rgba(255, 255, 255, 0.03);
+  border-bottom: 1px solid var(--input-border);
+  font-size: 0.8rem;
+  color: var(--text-dim);
+}
+.copy-code-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-dim);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.8rem;
+  transition: color 0.2s;
+}
+.copy-code-btn:hover { color: var(--accent); }
+.code-block-wrapper pre {
+  margin: 0;
+  padding: 14px;
+  background: transparent;
+  border-radius: 0;
+}
+
+/* GÖRSEL OLUŞTURMA */
+.generated-image {
+  max-width: 100%;
+  border-radius: 12px;
+  margin-top: 10px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
+
 /* MOBILE */
 @media (max-width: 768px) {
   .sidebar { width: 280px; left: -280px; }
