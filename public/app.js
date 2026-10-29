@@ -60,7 +60,7 @@ modelSelector.addEventListener("click", () => {
     modelSelector.style.color = "#a8c7fa";
     promptInput.placeholder = "Nasıl bir görsel oluşturmamı istersin? (Örn: Uzayda kahve içen bir astronot)";
   } else {
-    modelSelector.innerHTML = `Laguna 2.1 <i class='bx bx-chevron-down'></i>`;
+    modelSelector.innerHTML = `OpenRouter Auto <i class='bx bx-chevron-down'></i>`;
     modelSelector.style.color = "var(--text-dim)";
     promptInput.placeholder = "Gemini'a sorun...";
   }
@@ -99,7 +99,6 @@ sendBtn.addEventListener("click", handleSend);
 
 async function handleSend() {
   if (isImageMode) {
-    // Görsel oluşturma yarın eklenecek
     alert("Görsel oluşturma özelliği çok yakında eklenecek!");
   } else {
     await sendMessage();
@@ -379,9 +378,13 @@ function formatText(text) {
   return html;
 }
 
-// Global kopyalama fonksiyonu
+// Global kopyalama fonksiyonu (HTML entity düzeltmesi eklendi)
 window.copyCode = function(btn) {
-  const code = btn.closest('.code-block-wrapper').querySelector('code').innerText;
+  let code = btn.closest('.code-block-wrapper').querySelector('code').innerText;
+  
+  // HTML entity'lerini gerçek karakterlere çevir
+  code = code.replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&');
+
   navigator.clipboard.writeText(code).then(() => {
     btn.innerHTML = `<i class='bx bx-check'></i> Kopyalandı`;
     setTimeout(() => { btn.innerHTML = `<i class='bx bx-copy'></i> Kopyala`; }, 2000);
