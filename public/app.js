@@ -31,7 +31,7 @@ const SHIMMER_HTML = `
 let currentUser = null;
 let currentChatId = null;
 let autoScroll = true;
-let isImageMode = false; // Görsel modu açık/kapalı
+let isImageMode = false;
 
 main.addEventListener("scroll", () => {
   autoScroll = main.scrollHeight - main.scrollTop - main.clientHeight < 80;
@@ -60,7 +60,7 @@ modelSelector.addEventListener("click", () => {
     modelSelector.style.color = "#a8c7fa";
     promptInput.placeholder = "Nasıl bir görsel oluşturmamı istersin? (Örn: Uzayda kahve içen bir astronot)";
   } else {
-    modelSelector.innerHTML = `3.5 Flash Lite <i class='bx bx-chevron-down'></i>`;
+    modelSelector.innerHTML = `Laguna 2.1 <i class='bx bx-chevron-down'></i>`;
     modelSelector.style.color = "var(--text-dim)";
     promptInput.placeholder = "Gemini'a sorun...";
   }
@@ -99,7 +99,8 @@ sendBtn.addEventListener("click", handleSend);
 
 async function handleSend() {
   if (isImageMode) {
-    await generateImage();
+    // Görsel oluşturma yarın eklenecek
+    alert("Görsel oluşturma özelliği çok yakında eklenecek!");
   } else {
     await sendMessage();
   }
@@ -139,69 +140,6 @@ async function loadChat(chatId) {
   sidebar.classList.remove("open");
 }
 
-// --- GÖRSEL OLUŞTURMA ---
-async function generateImage() {
-  const text = promptInput.value.trim();
-  if (!text || !currentUser) return;
-
-  welcome.classList.add("hidden");
-  promptInput.value = "";
-  sendBtn.classList.remove("visible");
-  autoScroll = true;
-  addMessage("user", text);
-
-  if (!currentChatId) {
-    const docRef = await addDoc(collection(db, "chats"), {
-      uid: currentUser.uid,
-      title: text.slice(0, 40),
-      createdAt: serverTimestamp()
-    });
-    currentChatId = docRef.id;
-    generateTitle(currentChatId, text);
-  }
-
-  await addDoc(collection(db, "chats", currentChatId, "messages"), {
-    role: "user",
-    text,
-    timestamp: serverTimestamp()
-  });
-
-  await loadChats();
-
-  const aiMsgEl = addStreamingMessage();
-  aiMsgEl.innerHTML = SHIMMER_HTML;
-
-  try {
-    const response = await fetch("/api/imagine", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ prompt: text })
-    });
-
-    const data = await response.json();
-    if (!response.ok) throw new Error(data.error || "Görsel oluşturulamadı");
-
-    // Görseli ve metni bas
-    aiMsgEl.innerHTML = `
-      ${data.text ? `<p>${formatText(data.text)}</p>` : ''}
-      <img src="${data.image}" class="generated-image" alt="Oluşturulan Görsel" />
-    `;
-    scrollToBottom();
-
-    await addDoc(collection(db, "chats", currentChatId, "messages"), {
-      role: "ai",
-      text: data.text || "İşte oluşturduğum görsel:",
-      imageUrl: data.image,
-      timestamp: serverTimestamp()
-    });
-    await loadChats();
-
-  } catch (err) {
-    updateStreamingMessage(aiMsgEl, "Hata: " + err.message);
-  }
-}
-
-// --- METİN SOHBETİ ---
 async function sendMessage() {
   const text = promptInput.value.trim();
   if (!text || !currentUser) return;
@@ -242,6 +180,11 @@ async function sendMessage() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ message: text, history: history.slice(0, -1) })
     });
+
+    if (!response.ok) {
+      const errData = await response.json();
+      throw new Error(errData.error || "API hatası");
+    }
 
     const reader = response.body.getReader();
     const decoder = new TextDecoder();
@@ -378,7 +321,7 @@ function formatText(text) {
 
   // KOD BLOKLARI VE KOPYALAMA BUTONU
   html = html.replace(/```([\s\S]*?)```/g, (match, code) => {
-    const cleanCode = code.replace(/^[a-zA-Z0-9]+\n/, ''); // dil etiketini temizle
+    const cleanCode = code.replace(/^[a-zA-Z0-9]+\n/, '');
     const escapedCode = escapeHtml(cleanCode.trim());
     return `
       <div class="code-block-wrapper">
