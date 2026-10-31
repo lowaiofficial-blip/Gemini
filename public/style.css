@@ -401,26 +401,94 @@ body {
   50% { opacity: 0; }
 }
 
-/* SHIMMER LOADER */
-.loader {
+/* GEMINI TYPING LOADER (Yeni Animasyon) */
+.gemini-loader {
   display: flex;
-  flex-direction: column;
-  gap: 10px;
-  padding: 4px 0;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 0;
 }
-.loader .bar {
-  height: 14px;
-  border-radius: 4px;
-  background: linear-gradient(90deg, #17203a 0%, #2f56c4 45%, #17203a 90%);
-  background-size: 220% 100%;
-  animation: shimmer 1.6s linear infinite;
+
+.gemini-loader__wrap {
+  position: relative;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
-.loader .bar:nth-child(1) { width: 62%; }
-.loader .bar:nth-child(2) { width: 100%; animation-delay: -.5s; }
-.loader .bar:nth-child(3) { width: 68%; animation-delay: -1s; }
-@keyframes shimmer {
-  0%   { background-position: 220% 0; }
-  100% { background-position: -120% 0; }
+
+.gemini-loader__logo {
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
+  position: relative;
+  animation: pop 0.45s ease-out;
+}
+
+.gemini-loader__wrap.done .gemini-loader__logo {
+  animation: settle 0.5s ease-out;
+}
+
+.gemini-loader__wrap svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  animation: spin 1.4s linear infinite;
+  opacity: 1;
+  transition: opacity 0.45s ease;
+}
+
+.gemini-loader__wrap.done svg {
+  opacity: 0;
+}
+
+.gemini-loader__wrap circle {
+  fill: none;
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-dasharray: 1 100;
+  stroke-dashoffset: 0;
+  animation: dash 1.4s ease-in-out infinite, color 5.6s linear infinite;
+}
+
+/* Animasyon Keyframe'leri */
+@keyframes color {
+  0%   { stroke: #34A853; }
+  20%  { stroke: #34A853; }
+  30%  { stroke: #EA4335; }
+  45%  { stroke: #EA4335; }
+  55%  { stroke: #FBBC05; }
+  70%  { stroke: #FBBC05; }
+  80%  { stroke: #4285F4; }
+  95%  { stroke: #4285F4; }
+  100% { stroke: #34A853; }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes dash {
+  0%   { stroke-dasharray: 1 100;  stroke-dashoffset: 0; }
+  50%  { stroke-dasharray: 65 100; stroke-dashoffset: -25; }
+  100% { stroke-dasharray: 1 100;  stroke-dashoffset: -99; }
+}
+
+@keyframes pop {
+  from { transform: scale(0.6); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+@keyframes settle {
+  0% { transform: scale(1); }
+  40% { transform: scale(1.12); }
+  100% { transform: scale(1); }
+}
+
+.typing-done {
+  animation: settle 0.5s ease-out;
 }
 
 /* TABLES */
