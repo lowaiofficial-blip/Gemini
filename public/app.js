@@ -59,7 +59,7 @@ modelSelector.addEventListener("click", () => {
     modelSelector.style.color = "#a8c7fa";
     promptInput.placeholder = "Nasıl bir görsel oluşturmamı istersin?";
   } else {
-    modelSelector.innerHTML = `OpenRouter Auto <i class='bx bx-chevron-down'></i>`;
+    modelSelector.innerHTML = `Cohere North <i class='bx bx-chevron-down'></i>`;
     modelSelector.style.color = "var(--text-dim)";
     promptInput.placeholder = "Gemini'a sorun...";
   }
@@ -217,6 +217,7 @@ async function sendMessage() {
     }
 
     aiMsgEl.classList.remove("caret");
+
     await addDoc(collection(db, "chats", currentChatId, "messages"), {
       role: "ai", text: fullText, timestamp: serverTimestamp()
     });
