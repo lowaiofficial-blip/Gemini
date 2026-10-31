@@ -6,6 +6,7 @@
   <title>Gemini — Admin</title>
   <link rel="stylesheet" href="style.css" />
   <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet" />
+  <script type="module" src="favicon.js"></script>
 </head>
 <body class="admin-body">
 
@@ -20,6 +21,20 @@
   <main class="admin-main">
 
     <div id="viewUsers" class="admin-view">
+      <div class="admin-favicon-box">
+        <div class="admin-favicon-current">
+          <img id="faviconPreview" src="https://i.imgur.com/teeb0yO.png" alt="Favicon" />
+        </div>
+        <div class="admin-favicon-info">
+          <strong>Favicon</strong>
+          <span>Site ikonunu değiştir</span>
+        </div>
+        <label class="admin-favicon-btn">
+          <i class='bx bx-upload'></i> Yükle
+          <input type="file" id="faviconInput" accept="image/*" hidden />
+        </label>
+      </div>
+
       <input type="text" id="filterUser" class="admin-search" placeholder="Email ile ara" />
       <div class="admin-stats">
         <div class="admin-stat"><span id="statUsers">0</span><label>Kullanıcı</label></div>
