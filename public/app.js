@@ -20,7 +20,7 @@ const userAvatar = document.getElementById("userAvatar");
 const main = document.querySelector(".main");
 const modelSelector = document.getElementById("modelSelector");
 
-const LOGO = "https://i.imgur.com/viQJmJY.png";
+const LOGO = "https://i.imgur.com/teeb0yO.png";
 
 const SHIMMER_HTML = `
   <div class="loader">
@@ -52,13 +52,12 @@ onAuthStateChanged(auth, async (user) => {
   promptInput.focus();
 });
 
-// Model değiştirici (Sohbet / Görsel)
 modelSelector.addEventListener("click", () => {
   isImageMode = !isImageMode;
   if (isImageMode) {
     modelSelector.innerHTML = `Görsel Oluşturma <i class='bx bx-image-alt'></i>`;
     modelSelector.style.color = "#a8c7fa";
-    promptInput.placeholder = "Nasıl bir görsel oluşturmamı istersin? (Örn: Uzayda kahve içen bir astronot)";
+    promptInput.placeholder = "Nasıl bir görsel oluşturmamı istersin?";
   } else {
     modelSelector.innerHTML = `OpenRouter Auto <i class='bx bx-chevron-down'></i>`;
     modelSelector.style.color = "var(--text-dim)";
@@ -218,7 +217,6 @@ async function sendMessage() {
     }
 
     aiMsgEl.classList.remove("caret");
-
     await addDoc(collection(db, "chats", currentChatId, "messages"), {
       role: "ai", text: fullText, timestamp: serverTimestamp()
     });
@@ -226,7 +224,7 @@ async function sendMessage() {
 
   } catch (err) {
     aiMsgEl.classList.remove("caret");
-    updateStreamingMessage(aiMsgEl, "Hata: " + err.message);
+    updateStreamingMessage(aiMsgEl, "Bağlantı hatası oluştu. Lütfen tekrar deneyin. (" + err.message + ")");
   }
 }
 
@@ -318,7 +316,6 @@ function escapeHtml(str) {
 function formatText(text) {
   let html = escapeHtml(text);
 
-  // KOD BLOKLARI VE KOPYALAMA BUTONU
   html = html.replace(/```([\s\S]*?)```/g, (match, code) => {
     const cleanCode = code.replace(/^[a-zA-Z0-9]+\n/, '');
     const escapedCode = escapeHtml(cleanCode.trim());
@@ -333,7 +330,6 @@ function formatText(text) {
     `;
   });
 
-  // Tablolar
   html = html.replace(/((?:^\|.+\|\s*$\n?)+)/gm, (tableBlock) => {
     const lines = tableBlock.trim().split("\n").filter(l => l.trim());
     if (lines.length < 2) return tableBlock;
@@ -378,13 +374,9 @@ function formatText(text) {
   return html;
 }
 
-// Global kopyalama fonksiyonu (HTML entity düzeltmesi eklendi)
 window.copyCode = function(btn) {
   let code = btn.closest('.code-block-wrapper').querySelector('code').innerText;
-  
-  // HTML entity'lerini gerçek karakterlere çevir
   code = code.replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&');
-
   navigator.clipboard.writeText(code).then(() => {
     btn.innerHTML = `<i class='bx bx-check'></i> Kopyalandı`;
     setTimeout(() => { btn.innerHTML = `<i class='bx bx-copy'></i> Kopyala`; }, 2000);
