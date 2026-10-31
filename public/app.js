@@ -22,9 +22,13 @@ const modelSelector = document.getElementById("modelSelector");
 
 const LOGO = "https://i.imgur.com/teeb0yO.png";
 
+// Animasyonlu Loader
 const SHIMMER_HTML = `
-  <div class="loader">
-    <div class="bar"></div><div class="bar"></div><div class="bar"></div>
+  <div class="gemini-loader">
+    <div class="gemini-loader__wrap">
+      <svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="46" pathLength="100"/></svg>
+      <img class="gemini-loader__logo" src="${LOGO}" alt="Gemini">
+    </div>
   </div>
 `;
 
@@ -206,7 +210,7 @@ async function sendMessage() {
               if (!started) {
                 started = true;
                 aiMsgEl.classList.add("caret");
-                aiMsgEl.innerHTML = "";
+                aiMsgEl.innerHTML = ""; // Loader'ı sil, yazmaya başla
               }
               fullText += parsed.text;
               updateStreamingMessage(aiMsgEl, fullText);
@@ -216,7 +220,14 @@ async function sendMessage() {
       }
     }
 
+    // Yazma bitti: Caret'i kaldır ve "settle" animasyonu için class ekle
     aiMsgEl.classList.remove("caret");
+    aiMsgEl.classList.add("typing-done");
+    
+    // Animasyonun bitmesini bekle, sonra settle class'ını kaldır
+    setTimeout(() => {
+        aiMsgEl.classList.remove("typing-done");
+    }, 600);
 
     await addDoc(collection(db, "chats", currentChatId, "messages"), {
       role: "ai", text: fullText, timestamp: serverTimestamp()
