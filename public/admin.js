@@ -1,7 +1,7 @@
 import { auth, db } from "./firebase.js";
 import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import {
-  collection, getDocs, doc, getDoc
+  collection, getDocs, doc, getDoc, setDoc, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const viewUsers = document.getElementById("viewUsers");
@@ -22,6 +22,9 @@ const statMessages = document.getElementById("statMessages");
 const backBtn = document.getElementById("backBtn");
 const adminTitle = document.getElementById("adminTitle");
 
+const faviconInput = document.getElementById("faviconInput");
+const faviconPreview = document.getElementById("faviconPreview");
+
 let allUsers = [];
 let allChats = [];
 let currentUser = null;
@@ -38,6 +41,7 @@ onAuthStateChanged(auth, async (user) => {
     window.location.href = "/app";
     return;
   }
+  await loadFavicon();
   await loadData();
 });
 
@@ -58,6 +62,66 @@ backBtn.addEventListener("click", () => {
     adminTitle.textContent = "Gemini Admin";
     backBtn.classList.add("hide");
   }
+});
+
+async function loadFavicon() {
+  try {
+    const snap = await getDoc(doc(db, "settings", "favicon"));
+    if (snap.exists() && snap.data().url) {
+      faviconPreview.src = snap.data().url;
+    }
+  } catch (e) {}
+}
+
+faviconInput.addEventListener("change", async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  if (file.size > 2 * 1024 * 1024) {
+    alert("Resim 2MB'dan küçük olmalı");
+    return;
+  }
+
+  const reader = new FileReader();
+  reader.onload = async () => {
+    const base64 = reader.result.split(",")[1];
+
+    faviconPreview.style.opacity = "0.5";
+
+    try {
+      const response = await fetch("/api/upload-favicon", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ image: base64 })
+      });
+
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "Yükleme başarısız");
+
+      await setDoc(doc(db, "settings", "favicon"), {
+        url: data.url,
+        updatedAt: serverTimestamp()
+      });
+
+      faviconPreview.src = data.url;
+
+      let link = document.querySelector("link[rel='icon']");
+      if (!link) {
+        link = document.createElement("link");
+        link.rel = "icon";
+        document.head.appendChild(link);
+      }
+      link.href = data.url;
+
+      alert("Favicon güncellendi!");
+    } catch (err) {
+      alert("Hata: " + err.message);
+    } finally {
+      faviconPreview.style.opacity = "1";
+      faviconInput.value = "";
+    }
+  };
+  reader.readAsDataURL(file);
 });
 
 async function loadData() {
@@ -166,10 +230,11 @@ function openChat(chat) {
   chat.messages.forEach((m) => {
     const div = document.createElement("div");
     div.className = `admin-msg admin-msg--${m.role}`;
-    div.innerHTML = `
-      <b>${m.role === "user" ? "Kullanıcı" : "Gemini"}</b>
-      <p>${escapeHtml(m.text)}</p>
-    `;
+    let content = `<b>${m.role === "user" ? "Kullanıcı" : "Gemini"}</b><p>${escapeHtml(m.text)}</p>`;
+    if (m.imageUrl) {
+      content += `<img src="${m.imageUrl}" style="max-width: 100%; border-radius: 8px; margin-top: 8px;" />`;
+    }
+    div.innerHTML = content;
     messageList.appendChild(div);
   });
 }
