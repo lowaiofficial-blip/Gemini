@@ -401,7 +401,7 @@ body {
   50% { opacity: 0; }
 }
 
-/* GEMINI TYPING LOADER (Yeni Animasyon) */
+/* GEMINI TYPING LOADER */
 .gemini-loader {
   display: flex;
   align-items: center;
@@ -487,8 +487,14 @@ body {
   100% { transform: scale(1); }
 }
 
+/* YAZMA BİTİNCE HAVADAN DÜŞMEYİ ENGELLEYEN ANİMASYON */
 .typing-done {
-  animation: settle 0.5s ease-out;
+  animation: settleText 0.5s ease-out;
+}
+
+@keyframes settleText {
+  0% { opacity: 0.8; transform: translateY(-3px); }
+  100% { opacity: 1; transform: translateY(0); }
 }
 
 /* TABLES */
