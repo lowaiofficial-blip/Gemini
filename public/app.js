@@ -22,7 +22,6 @@ const modelSelector = document.getElementById("modelSelector");
 
 const LOGO = "https://i.imgur.com/teeb0yO.png";
 
-// Animasyonlu Loader
 const SHIMMER_HTML = `
   <div class="gemini-loader">
     <div class="gemini-loader__wrap">
@@ -36,6 +35,7 @@ let currentUser = null;
 let currentChatId = null;
 let autoScroll = true;
 let isImageMode = false;
+let isGenerating = false; // YENİ: Yazma durumu kontrolü
 
 main.addEventListener("scroll", () => {
   autoScroll = main.scrollHeight - main.scrollTop - main.clientHeight < 80;
@@ -77,7 +77,10 @@ logoutBtn.addEventListener("click", async () => {
   window.location.href = "/login";
 });
 
+// YENİ SOHBET BUG DÜZELTMESİ
 newChatBtn.addEventListener("click", () => {
+  if (isGenerating) return; // Eğer bot şu an yazıyorsa iptal etme, bekle
+  
   currentChatId = null;
   chat.innerHTML = "";
   welcome.classList.remove("hidden");
@@ -94,11 +97,13 @@ promptInput.addEventListener("input", () => {
 promptInput.addEventListener("keydown", (e) => {
   if (e.key === "Enter" && !e.shiftKey) {
     e.preventDefault();
-    handleSend();
+    if (!isGenerating) handleSend(); // Yazıyorsa yeni mesaj gönderme
   }
 });
 
-sendBtn.addEventListener("click", handleSend);
+sendBtn.addEventListener("click", () => {
+  if (!isGenerating) handleSend();
+});
 
 async function handleSend() {
   if (isImageMode) {
@@ -121,7 +126,9 @@ async function loadChats() {
     item.className = "sidebar__recent-item";
     if (c.id === currentChatId) item.classList.add("active");
     item.innerHTML = `<span>${escapeHtml(c.title || "Yeni sohbet")}</span>`;
-    item.addEventListener("click", () => loadChat(c.id));
+    item.addEventListener("click", () => {
+        if(!isGenerating) loadChat(c.id);
+    });
     chatList.appendChild(item);
   });
 }
@@ -144,8 +151,9 @@ async function loadChat(chatId) {
 
 async function sendMessage() {
   const text = promptInput.value.trim();
-  if (!text || !currentUser) return;
+  if (!text || !currentUser || isGenerating) return;
 
+  isGenerating = true; // Kilit açıldı
   welcome.classList.add("hidden");
   promptInput.value = "";
   sendBtn.classList.remove("visible");
@@ -210,7 +218,7 @@ async function sendMessage() {
               if (!started) {
                 started = true;
                 aiMsgEl.classList.add("caret");
-                aiMsgEl.innerHTML = ""; // Loader'ı sil, yazmaya başla
+                aiMsgEl.innerHTML = ""; 
               }
               fullText += parsed.text;
               updateStreamingMessage(aiMsgEl, fullText);
@@ -220,14 +228,17 @@ async function sendMessage() {
       }
     }
 
-    // Yazma bitti: Caret'i kaldır ve "settle" animasyonu için class ekle
     aiMsgEl.classList.remove("caret");
-    aiMsgEl.classList.add("typing-done");
     
-    // Animasyonun bitmesini bekle, sonra settle class'ını kaldır
-    setTimeout(() => {
-        aiMsgEl.classList.remove("typing-done");
-    }, 600);
+    // BİTİŞ ANİMASYONU
+    if (aiMsgEl.innerHTML.trim() === SHIMMER_HTML.trim()) {
+        // Eğer hiç yazı gelmediyse loader'ı kaldır
+        aiMsgEl.innerHTML = "";
+    }
+    
+    // Sadece yazma bittiyse 'settle' efekti
+    aiMsgEl.classList.add("typing-done");
+    setTimeout(() => { aiMsgEl.classList.remove("typing-done"); }, 500);
 
     await addDoc(collection(db, "chats", currentChatId, "messages"), {
       role: "ai", text: fullText, timestamp: serverTimestamp()
@@ -237,6 +248,8 @@ async function sendMessage() {
   } catch (err) {
     aiMsgEl.classList.remove("caret");
     updateStreamingMessage(aiMsgEl, "Bağlantı hatası oluştu. Lütfen tekrar deneyin. (" + err.message + ")");
+  } finally {
+    isGenerating = false; // Kilit açıldı
   }
 }
 
