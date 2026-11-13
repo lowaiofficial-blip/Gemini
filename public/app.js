@@ -20,22 +20,33 @@ const userAvatar = document.getElementById("userAvatar");
 const main = document.querySelector(".main");
 const modelSelector = document.getElementById("modelSelector");
 
-const LOGO = "https://i.imgur.com/teeb0yO.png";
+const EVIL_LOGO = "https://i.imgur.com/xSSVkY4.png";
 
-const SHIMMER_HTML = `
-  <div class="gemini-loader">
-    <div class="gemini-loader__wrap">
-      <svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="46" pathLength="100"/></svg>
-      <img class="gemini-loader__logo" src="${LOGO}" alt="Gemini">
+const EVIL_SOURCES = [
+  { domain: "wikipedia.org", title: "Büyük dil modelleri: tarihçe, mimari ve kullanım alanları" },
+  { domain: "github.com", title: "transformers: Son teknoloji makine öğrenmesi modelleri için açık kaynak kütüphane" },
+  { domain: "medium.com", title: "Retrieval-Augmented Generation (RAG) sistemleri nasıl çalışır?" },
+  { domain: "arxiv.org", title: "Attention Is All You Need: Dikkat mekanizmasına dayalı sinir ağı mimarisi" },
+];
+
+const getFavicon = (domain) => `https://www.google.com/s2/favicons?domain=${domain}&sz=64`;
+
+function createEvilResearchLoader() {
+  return `
+    <div class="evil-research">
+      <div class="evil-research__status">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/></svg>
+        <span class="evil-status-text">Web'de aranıyor...</span>
+      </div>
+      <div class="evil-research__sources"></div>
     </div>
-  </div>
-`;
+  `;
+}
 
 let currentUser = null;
 let currentChatId = null;
 let autoScroll = true;
-let isImageMode = false;
-let isGenerating = false; // YENİ: Yazma durumu kontrolü
+let isGenerating = false;
 
 main.addEventListener("scroll", () => {
   autoScroll = main.scrollHeight - main.scrollTop - main.clientHeight < 80;
@@ -51,22 +62,14 @@ onAuthStateChanged(auth, async (user) => {
   const displayName = user.displayName || user.email.split("@")[0];
   userName.textContent = displayName;
   if (user.photoURL) userAvatar.style.backgroundImage = `url(${user.photoURL})`;
-  welcomeTitle.textContent = `Merhaba, ${displayName}!`;
+  welcomeTitle.textContent = `Merhaba, ${displayName}. Ne yapacağız?`;
   await loadChats();
   promptInput.focus();
 });
 
+// Model Değiştirici (Sadece Görsel Modu için, metin hep Evil Gemini)
 modelSelector.addEventListener("click", () => {
-  isImageMode = !isImageMode;
-  if (isImageMode) {
-    modelSelector.innerHTML = `Görsel Oluşturma <i class='bx bx-image-alt'></i>`;
-    modelSelector.style.color = "#a8c7fa";
-    promptInput.placeholder = "Nasıl bir görsel oluşturmamı istersin?";
-  } else {
-    modelSelector.innerHTML = `Cohere North <i class='bx bx-chevron-down'></i>`;
-    modelSelector.style.color = "var(--text-dim)";
-    promptInput.placeholder = "Gemini'a sorun...";
-  }
+  alert("Görsel oluşturma özelliği yakında eklenecek. Şu an Evil Gemini metin modunda.");
 });
 
 menuBtn.addEventListener("click", () => sidebar.classList.add("open"));
@@ -77,10 +80,8 @@ logoutBtn.addEventListener("click", async () => {
   window.location.href = "/login";
 });
 
-// YENİ SOHBET BUG DÜZELTMESİ
 newChatBtn.addEventListener("click", () => {
-  if (isGenerating) return; // Eğer bot şu an yazıyorsa iptal etme, bekle
-  
+  if (isGenerating) return;
   currentChatId = null;
   chat.innerHTML = "";
   welcome.classList.remove("hidden");
@@ -97,21 +98,13 @@ promptInput.addEventListener("input", () => {
 promptInput.addEventListener("keydown", (e) => {
   if (e.key === "Enter" && !e.shiftKey) {
     e.preventDefault();
-    if (!isGenerating) handleSend(); // Yazıyorsa yeni mesaj gönderme
+    if (!isGenerating) sendMessage();
   }
 });
 
 sendBtn.addEventListener("click", () => {
-  if (!isGenerating) handleSend();
+  if (!isGenerating) sendMessage();
 });
-
-async function handleSend() {
-  if (isImageMode) {
-    alert("Görsel oluşturma özelliği çok yakında eklenecek!");
-  } else {
-    await sendMessage();
-  }
-}
 
 async function loadChats() {
   chatList.innerHTML = "";
@@ -153,7 +146,7 @@ async function sendMessage() {
   const text = promptInput.value.trim();
   if (!text || !currentUser || isGenerating) return;
 
-  isGenerating = true; // Kilit açıldı
+  isGenerating = true;
   welcome.classList.add("hidden");
   promptInput.value = "";
   sendBtn.classList.remove("visible");
@@ -217,8 +210,7 @@ async function sendMessage() {
             if (parsed.text) {
               if (!started) {
                 started = true;
-                aiMsgEl.classList.add("caret");
-                aiMsgEl.innerHTML = ""; 
+                aiMsgEl.innerHTML = "";
               }
               fullText += parsed.text;
               updateStreamingMessage(aiMsgEl, fullText);
@@ -228,15 +220,6 @@ async function sendMessage() {
       }
     }
 
-    aiMsgEl.classList.remove("caret");
-    
-    // BİTİŞ ANİMASYONU
-    if (aiMsgEl.innerHTML.trim() === SHIMMER_HTML.trim()) {
-        // Eğer hiç yazı gelmediyse loader'ı kaldır
-        aiMsgEl.innerHTML = "";
-    }
-    
-    // Sadece yazma bittiyse 'settle' efekti
     aiMsgEl.classList.add("typing-done");
     setTimeout(() => { aiMsgEl.classList.remove("typing-done"); }, 500);
 
@@ -246,10 +229,9 @@ async function sendMessage() {
     await loadChats();
 
   } catch (err) {
-    aiMsgEl.classList.remove("caret");
-    updateStreamingMessage(aiMsgEl, "Bağlantı hatası oluştu. Lütfen tekrar deneyin. (" + err.message + ")");
+    updateStreamingMessage(aiMsgEl, "Hata: " + err.message);
   } finally {
-    isGenerating = false; // Kilit açıldı
+    isGenerating = false;
   }
 }
 
@@ -259,7 +241,7 @@ async function generateTitle(chatId, firstMessage) {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        message: `Bu sohbet için 3-5 kelimelik kısa bir başlık üret. Sadece başlığı yaz, başka hiçbir şey yazma. Mesaj: "${firstMessage}"`
+        message: `Bu sohbet için 3-5 kelimelik kısa, karanlık bir başlık üret. Sadece başlığı yaz. Mesaj: "${firstMessage}"`
       })
     });
     const reader = response.body.getReader();
@@ -305,7 +287,7 @@ function addMessage(role, text, imageUrl = null) {
       html += `<br><img src="${imageUrl}" class="generated-image" alt="Görsel" />`;
     }
     msg.innerHTML = `
-      <div class="chat__avatar chat__avatar--ai"><img src="${LOGO}" alt="Gemini" class="chat-logo"></div>
+      <div class="chat__avatar chat__avatar--ai"><img src="${EVIL_LOGO}" alt="Evil Gemini" class="chat-logo"></div>
       <div class="chat__bubble">${html}</div>
     `;
   }
@@ -318,12 +300,31 @@ function addStreamingMessage() {
   const msg = document.createElement("div");
   msg.className = "chat__msg chat__msg--ai";
   msg.innerHTML = `
-    <div class="chat__avatar chat__avatar--ai"><img src="${LOGO}" alt="Gemini" class="chat-logo"></div>
-    <div class="chat__bubble">${SHIMMER_HTML}</div>
+    <div class="chat__avatar chat__avatar--ai"><img src="${EVIL_LOGO}" alt="Evil Gemini" class="chat-logo"></div>
+    <div class="chat__bubble">${createEvilResearchLoader()}</div>
   `;
   chat.appendChild(msg);
   autoScroll = true;
   scrollToBottom();
+
+  const sourcesContainer = msg.querySelector(".evil-research__sources");
+  const statusText = msg.querySelector(".evil-status-text");
+  
+  EVIL_SOURCES.forEach((src, i) => {
+    setTimeout(() => {
+      if (!msg.isConnected) return;
+      const sourceEl = document.createElement("div");
+      sourceEl.className = "evil-source";
+      sourceEl.innerHTML = `<img src="${getFavicon(src.domain)}" /> <span>${src.domain}</span> - ${src.title}`;
+      sourcesContainer.appendChild(sourceEl);
+      
+      if (i === 1) statusText.innerText = "Siteler okunuyor...";
+      if (i === EVIL_SOURCES.length - 1) statusText.innerText = "Bilgiler birleştiriliyor...";
+      
+      scrollToBottom();
+    }, (i + 1) * 1000);
+  });
+
   return msg.querySelector(".chat__bubble");
 }
 
