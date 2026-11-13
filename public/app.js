@@ -22,6 +22,9 @@ const modelSelector = document.getElementById("modelSelector");
 
 const EVIL_LOGO = "https://i.imgur.com/xSSVkY4.png";
 
+// Araştırma komutları için regex
+const RESEARCH_REGEX = /araştır|internetten bak|web'de ara|incele|kaynak bul/i;
+
 const EVIL_SOURCES = [
   { domain: "wikipedia.org", title: "Büyük dil modelleri: tarihçe, mimari ve kullanım alanları" },
   { domain: "github.com", title: "transformers: Son teknoloji makine öğrenmesi modelleri için açık kaynak kütüphane" },
@@ -67,7 +70,6 @@ onAuthStateChanged(auth, async (user) => {
   promptInput.focus();
 });
 
-// Model Değiştirici (Sadece Görsel Modu için, metin hep Evil Gemini)
 modelSelector.addEventListener("click", () => {
   alert("Görsel oluşturma özelliği yakında eklenecek. Şu an Evil Gemini metin modunda.");
 });
@@ -174,14 +176,21 @@ async function sendMessage() {
   historySnap.forEach((d) => history.push(d.data()));
   history.sort((a, b) => (a.timestamp?.seconds || 0) - (b.timestamp?.seconds || 0));
 
-  const aiMsgEl = addStreamingMessage();
+  // Araştırma komutu mu?
+  const isResearch = RESEARCH_REGEX.test(text);
+
+  const aiMsgEl = isResearch ? addResearchMessage() : addStreamingMessage();
   let fullText = "";
 
   try {
     const response = await fetch("/api/chat", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ message: text, history: history.slice(0, -1) })
+      body: JSON.stringify({ 
+        message: text, 
+        history: history.slice(0, -1),
+        isResearch: isResearch
+      })
     });
 
     if (!response.ok) {
@@ -297,6 +306,26 @@ function addMessage(role, text, imageUrl = null) {
 }
 
 function addStreamingMessage() {
+  const msg = document.createElement("div");
+  msg.className = "chat__msg chat__msg--ai";
+  msg.innerHTML = `
+    <div class="chat__avatar chat__avatar--ai"><img src="${EVIL_LOGO}" alt="Evil Gemini" class="chat-logo"></div>
+    <div class="chat__bubble">
+      <div class="gemini-loader">
+        <div class="gemini-loader__wrap">
+          <svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="46" pathLength="100"/></svg>
+          <img class="gemini-loader__logo" src="${EVIL_LOGO}" alt="Gemini">
+        </div>
+      </div>
+    </div>
+  `;
+  chat.appendChild(msg);
+  autoScroll = true;
+  scrollToBottom();
+  return msg.querySelector(".chat__bubble");
+}
+
+function addResearchMessage() {
   const msg = document.createElement("div");
   msg.className = "chat__msg chat__msg--ai";
   msg.innerHTML = `
