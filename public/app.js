@@ -24,10 +24,10 @@ const EVIL_LOGO = "https://i.imgur.com/xSSVkY4.png";
 const RESEARCH_REGEX = /araştır|internetten bak|web'de ara|incele|kaynak bul/i;
 
 const EVIL_SOURCES = [
-  { domain: "wikipedia.org", title: "Büyük dil modelleri: tarihçe, mimari ve kullanım alanları" },
-  { domain: "github.com", title: "transformers: Son teknoloji makine öğrenmesi modelleri için açık kaynak kütüphane" },
-  { domain: "medium.com", title: "Retrieval-Augmented Generation (RAG) sistemleri nasıl çalışır?" },
-  { domain: "arxiv.org", title: "Attention Is All You Need: Dikkat mekanizmasına dayalı sinir ağı mimarisi" },
+  { domain: "wikipedia.org", title: "Büyük dil modelleri" },
+  { domain: "github.com", title: "transformers" },
+  { domain: "medium.com", title: "RAG sistemleri" },
+  { domain: "arxiv.org", title: "Attention Is All You Need" },
 ];
 
 const getFavicon = (domain) => `https://www.google.com/s2/favicons?domain=${domain}&sz=64`;
@@ -69,7 +69,7 @@ onAuthStateChanged(auth, async (user) => {
 });
 
 modelSelector.addEventListener("click", () => {
-  alert("Görsel oluşturma özelliği yakında. Şu an Evil Gemini metin modunda.");
+  alert("Görsel oluşturma özelliği yakında.");
 });
 
 menuBtn.addEventListener("click", () => sidebar.classList.add("open"));
@@ -189,7 +189,7 @@ async function sendMessage() {
 
     if (!response.ok) {
       const errData = await response.json();
-      throw new Error(errData.error || "API hatası");
+      throw new Error(errData.error || "API Hatası");
     }
 
     const reader = response.body.getReader();
@@ -224,7 +224,7 @@ async function sendMessage() {
     }
 
     if (!started) {
-      aiMsgEl.innerHTML = "Model boş yanıt döndürdü. Lütfen tekrar deneyin.";
+      throw new Error("Modelden yanıt gelmedi.");
     }
 
     aiMsgEl.classList.add("typing-done");
@@ -236,8 +236,7 @@ async function sendMessage() {
     await loadChats();
 
   } catch (err) {
-    aiMsgEl.classList.remove("caret");
-    aiMsgEl.innerHTML = `<span style="color: #ff4a4a;">Hata: ${err.message}</span>`;
+    aiMsgEl.innerHTML = `<span style="color: red; font-weight: bold;">Hata: ${err.message}</span>`;
   } finally {
     isGenerating = false;
   }
