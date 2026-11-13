@@ -13,7 +13,7 @@
   --text: #e3e3e3;
   --text-dim: #9aa0a6;
   --hover: #2a2b2d;
-  --accent: #a8c7fa;
+  --accent: #ff4a4a; /* Evil kırmızı */
   --input-bg: #1e1f20;
   --input-border: #2a2b2d;
 }
@@ -34,6 +34,7 @@ body {
   width: 96px;
   height: 96px;
   object-fit: contain;
+  filter: drop-shadow(0 0 15px rgba(255, 74, 74, 0.4)); /* Kırmızı parlama */
 }
 .chat-logo {
   width: 24px;
@@ -327,7 +328,7 @@ body {
 .welcome__title {
   font-size: 2.2rem;
   font-weight: 600;
-  background: linear-gradient(to right, #4a90e2, #a355b9, #ff6b6b);
+  background: linear-gradient(to right, #ff4a4a, #a355b9, #4a90e2); /* Evil Gradient */
   background-clip: text;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -389,19 +390,53 @@ body {
   word-wrap: break-word;
 }
 
-/* CARET */
-.caret::after {
-  content: "|";
-  color: var(--accent);
-  margin-left: 2px;
-  animation: blink 1s step-end infinite;
-}
-@keyframes blink {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0; }
+/* EVIL GEMINI RESEARCH ANIMATION */
+.evil-research {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 12px 0;
 }
 
-/* GEMINI TYPING LOADER */
+.evil-research__status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #ff4a4a;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.evil-research__status svg {
+  animation: spin 2s linear infinite;
+}
+
+.evil-research__sources {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.evil-source {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--input-bg);
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  color: var(--text-dim);
+  border-left: 2px solid #ff4a4a;
+  animation: slideIn 0.3s ease-out;
+}
+
+.evil-source img {
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+}
+
+/* NORMAL TYPING LOADER */
 .gemini-loader {
   display: flex;
   align-items: center;
@@ -487,7 +522,11 @@ body {
   100% { transform: scale(1); }
 }
 
-/* YAZMA BİTİNCE HAVADAN DÜŞMEYİ ENGELLEYEN ANİMASYON */
+@keyframes slideIn {
+  from { opacity: 0; transform: translateX(-10px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
 .typing-done {
   animation: settleText 0.5s ease-out;
 }
