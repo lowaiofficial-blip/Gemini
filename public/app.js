@@ -21,8 +21,6 @@ const main = document.querySelector(".main");
 const modelSelector = document.getElementById("modelSelector");
 
 const EVIL_LOGO = "https://i.imgur.com/xSSVkY4.png";
-
-// Araştırma komutları için regex
 const RESEARCH_REGEX = /araştır|internetten bak|web'de ara|incele|kaynak bul/i;
 
 const EVIL_SOURCES = [
@@ -65,13 +63,13 @@ onAuthStateChanged(auth, async (user) => {
   const displayName = user.displayName || user.email.split("@")[0];
   userName.textContent = displayName;
   if (user.photoURL) userAvatar.style.backgroundImage = `url(${user.photoURL})`;
-  welcomeTitle.textContent = `Merhaba, ${displayName}. Ne yapacağız?`;
+  welcomeTitle.textContent = `Ben Evil Gemini. Ne yapıyoruz ${displayName}?`;
   await loadChats();
   promptInput.focus();
 });
 
 modelSelector.addEventListener("click", () => {
-  alert("Görsel oluşturma özelliği yakında eklenecek. Şu an Evil Gemini metin modunda.");
+  alert("Görsel oluşturma özelliği yakında. Şu an Evil Gemini metin modunda.");
 });
 
 menuBtn.addEventListener("click", () => sidebar.classList.add("open"));
@@ -121,9 +119,7 @@ async function loadChats() {
     item.className = "sidebar__recent-item";
     if (c.id === currentChatId) item.classList.add("active");
     item.innerHTML = `<span>${escapeHtml(c.title || "Yeni sohbet")}</span>`;
-    item.addEventListener("click", () => {
-        if(!isGenerating) loadChat(c.id);
-    });
+    item.addEventListener("click", () => { if(!isGenerating) loadChat(c.id); });
     chatList.appendChild(item);
   });
 }
@@ -176,9 +172,7 @@ async function sendMessage() {
   historySnap.forEach((d) => history.push(d.data()));
   history.sort((a, b) => (a.timestamp?.seconds || 0) - (b.timestamp?.seconds || 0));
 
-  // Araştırma komutu mu?
   const isResearch = RESEARCH_REGEX.test(text);
-
   const aiMsgEl = isResearch ? addResearchMessage() : addStreamingMessage();
   let fullText = "";
 
