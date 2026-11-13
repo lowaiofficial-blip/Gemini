@@ -63,7 +63,7 @@ onAuthStateChanged(auth, async (user) => {
   const displayName = user.displayName || user.email.split("@")[0];
   userName.textContent = displayName;
   if (user.photoURL) userAvatar.style.backgroundImage = `url(${user.photoURL})`;
-  welcomeTitle.textContent = `Ben Evil Gemini. Ne yapıyoruz ${displayName}?`;
+  welcomeTitle.textContent = `Merhaba, ${displayName}. Ne yapacağız?`;
   await loadChats();
   promptInput.focus();
 });
@@ -223,6 +223,10 @@ async function sendMessage() {
       }
     }
 
+    if (!started) {
+      aiMsgEl.innerHTML = "Model boş yanıt döndürdü. Lütfen tekrar deneyin.";
+    }
+
     aiMsgEl.classList.add("typing-done");
     setTimeout(() => { aiMsgEl.classList.remove("typing-done"); }, 500);
 
@@ -232,7 +236,8 @@ async function sendMessage() {
     await loadChats();
 
   } catch (err) {
-    updateStreamingMessage(aiMsgEl, "Hata: " + err.message);
+    aiMsgEl.classList.remove("caret");
+    aiMsgEl.innerHTML = `<span style="color: #ff4a4a;">Hata: ${err.message}</span>`;
   } finally {
     isGenerating = false;
   }
