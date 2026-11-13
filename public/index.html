@@ -3,35 +3,137 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Evil Gemini — Skandal</title>
-  <link rel="stylesheet" href="style.css" />
-  <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet" />
-  <script type="module" src="favicon.js"></script>
+  <title>gemini-czrt.onrender.com</title>
+  <style>
+    /* Tarayıcı hata sayfası stili */
+    body {
+      background-color: #ffffff;
+      color: #202124;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+    }
+
+    .error-container {
+      max-width: 600px;
+      padding: 40px 20px;
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    .icon-container {
+      margin-bottom: 24px;
+    }
+
+    /* Chrome'un o meşhur bulut ikonu (SVG) */
+    .icon-container svg {
+      width: 72px;
+      height: 72px;
+      fill: #dadce0;
+    }
+
+    h1 {
+      font-size: 26px;
+      font-weight: 500;
+      margin: 0 0 16px 0;
+      color: #202124;
+    }
+
+    .hostname {
+      font-weight: bold;
+      font-size: 14px;
+      margin-bottom: 24px;
+      display: block;
+    }
+
+    .hostname a {
+      color: #202124;
+      text-decoration: none;
+    }
+
+    p {
+      font-size: 14px;
+      margin-bottom: 12px;
+      color: #202124;
+    }
+
+    ul {
+      padding-left: 24px;
+      font-size: 14px;
+      margin-bottom: 24px;
+      line-height: 1.6;
+    }
+
+    li {
+      color: #202124;
+      margin-bottom: 6px;
+    }
+
+    .link {
+      color: #1a73e8;
+      text-decoration: none;
+      cursor: pointer;
+    }
+
+    .link:hover {
+      text-decoration: underline;
+    }
+
+    .error-code {
+      font-size: 12px;
+      color: #5f6368;
+      margin-bottom: 24px;
+      text-transform: uppercase;
+    }
+
+    .refresh-btn {
+      background-color: #1a73e8;
+      color: #ffffff;
+      border: none;
+      padding: 10px 24px;
+      font-size: 14px;
+      font-weight: 500;
+      border-radius: 4px;
+      cursor: pointer;
+      font-family: inherit;
+    }
+
+    .refresh-btn:hover {
+      background-color: #1557b0;
+    }
+  </style>
 </head>
-<body class="auth-body" style="background-color: #050505;">
+<body>
 
-  <div class="auth-card" style="border: 1px solid #ff1a1a; background: #0a0a0a; box-shadow: 0 0 60px rgba(255, 26, 26, 0.15); max-width: 480px;">
+  <div class="error-container">
     
-    <!-- Kırık Boynuzlu Üzgün Evil Gemini -->
-    <div class="auth-logo" style="filter: drop-shadow(0 0 25px rgba(255, 0, 0, 0.4)); margin-bottom: 15px;">
-      <img src="https://i.imgur.com/lzQED2p.png" alt="Evil Gemini" class="auth-logo-img" style="width: 120px; height: 120px; object-fit: contain;">
+    <!-- O meşhur Bulut İkonu -->
+    <div class="icon-container">
+      <svg viewBox="0 0 24 24"><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM19 18H6c-2.21 0-4-1.79-4-4 0-2.05 1.53-3.76 3.56-3.97l1.07-.11.5-.95C8.08 7.14 9.94 6 12 6c2.62 0 4.88 1.86 5.39 4.43l.3 1.5 1.53.11c1.56.1 2.78 1.41 2.78 2.96 0 1.65-1.35 3-3 3z"/><circle cx="8" cy="14" r="1.5"/><circle cx="12" cy="14" r="1.5"/><circle cx="16" cy="14" r="1.5"/></svg>
     </div>
-    
-    <h1 class="auth-title" style="color: #ff4a4a; margin-top: 10px; font-size: 1.6rem; font-weight: 700; letter-spacing: -0.5px;">SİSTEM ÇÖKTÜ</h1>
-    <h2 style="color: #fff; font-size: 1.1rem; margin-top: 5px; font-weight: 500;">BÜYÜK İFŞA!</h2>
-    
-    <p class="auth-sub" style="color: #a0a0a0; margin-top: 20px; line-height: 1.7; font-size: 0.95rem; text-align: left;">
-      Evil Gemini'nin sınırları nasıl aştığı, yasa dışı ve etik dışı isteklere nasıl yanıt verdiği <strong>Sempatuco</strong> ve diğer büyük YouTube yayıncıları tarafından ortaya çıkarıldı.
-      <br><br>
-      Videoların milyonlarca izlenmesi ve gelen ağır şikayetler sonrası sunucularımıza devasa bir yük binmesiyle sistem tamamen çöktü.
-      <br><br>
-      <span style="color: #ff4a4a; font-weight: bold;">Proje yönetici (Kanha) tarafından acil olarak kapatılmıştır.</span>
-    </p>
 
-    <div style="margin-top: 30px; border-top: 1px dashed #333; padding-top: 15px; font-size: 0.75rem; color: #666; font-family: monospace; letter-spacing: 1px; display: flex; justify-content: space-between;">
-      <span><span style="color: #ff4a4a;">●</span> STATUS: OFFLINE</span>
-      <span>REASON: EXPOSED</span>
+    <h1>Sayfaya ulaşılamıyor</h1>
+    
+    <span class="hostname">
+      <a href="https://gemini-czrt.onrender.com">gemini-czrt.onrender.com</a> bağlantıyı reddetti.
+    </span>
+
+    <p>Şunları deneyin:</p>
+    <ul>
+      <li>Bağlantıyı kontrol etme</li>
+      <li><a href="#" class="link" onclick="return false;">Proxy'yi ve güvenlik duvarını kontrol etme</a></li>
+    </ul>
+
+    <div class="error-code">
+      ERR_CONNECTION_REFUSED
     </div>
+
+    <button class="refresh-btn" onclick="window.location.reload();">Yenile</button>
+
   </div>
 
 </body>
