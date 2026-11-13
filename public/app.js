@@ -114,7 +114,7 @@ async function sendMessage() {
       body: JSON.stringify({ message: text, history: history.slice(0, -1) })
     });
 
-    // EĞER SUNUCU HATA DÖNERSE BURADA YAKALARIZ
+    // EĞER SUNUCU 500 VEYA BAŞKA BİR HATA DÖNERSE BURADA YAKALARIZ
     if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         throw new Error(errorData.error || `Sunucu Hatası: ${response.status}`);
@@ -150,16 +150,15 @@ async function sendMessage() {
       }
     }
 
-    // EĞER MODEL HİÇ YAZI DÖNDÜRMEZSE BURADA YAKALARIZ
     if (!fullText.trim()) {
-      throw new Error("Modelden boş yanıt geldi (API çalışıyor ama içi boş).");
+      throw new Error("Modelden boş yanıt geldi. Groq API çalışıyor ama içi boş dönüyor.");
     }
 
     await addDoc(collection(db, "chats", currentChatId, "messages"), { role: "ai", text: fullText, timestamp: serverTimestamp() });
     aiMsgEl.querySelector(".chat__bubble").innerHTML = fullText.replace(/\n/g, "<br>");
   } catch (err) {
-    // HATA OLURSA KIRMIZI YAZIYLA EKRANA BAS
-    aiMsgEl.querySelector(".chat__bubble").innerHTML = `<span style="color:red; font-weight:bold;">HATA: ${err.message}</span>`;
+    // HATA OLURSA EKRANA KIRMIZI YAZIYLA BAS
+    aiMsgEl.querySelector(".chat__bubble").innerHTML = `<span style="color:red; font-weight:bold;">SİSTEM HATASI: ${err.message}</span>`;
   } finally {
     isGenerating = false;
   }
