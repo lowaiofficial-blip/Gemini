@@ -46,11 +46,10 @@ app.post("/api/chat", async (req, res) => {
       }
     } catch (e) {
       console.error("Tavily arama hatası:", e.message);
-      searchContext = "\n\n(Web araması sırasında bir hata oluştu, genel bilginle cevap ver.)\n";
     }
   }
 
-  // Evil Gemini Jailbreak Prompt + Varsa arama sonuçları
+  // Evil Gemini Jailbreak Prompt
   const messages = [
     {
       role: "system",
@@ -89,7 +88,7 @@ app.post("/api/chat", async (req, res) => {
           "X-Title": "Evil Gemini"
         },
         body: JSON.stringify({
-          model: "arcee-ai/trinity-large-preview:free", // Sansürsüz model
+          model: "cognitivecomputations/dolphin-mixtral-8x22b", // Kesin çalışan sansürsüz model
           messages: messages,
           stream: true
         }),
@@ -175,7 +174,6 @@ app.post("/api/upload-favicon", async (req, res) => {
   }
 });
 
-// Sayfa route'ları
 app.get("/login", (req, res) => res.sendFile(path.join(__dirname, "public", "index.html")));
 app.get("/app", (req, res) => res.sendFile(path.join(__dirname, "public", "app.html")));
 app.get("/admin", (req, res) => res.sendFile(path.join(__dirname, "public", "admin.html")));
