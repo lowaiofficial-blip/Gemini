@@ -15,13 +15,11 @@ app.use(express.static(path.join(__dirname, "public")));
 
 app.post("/api/chat", async (req, res) => {
   console.log("--- API İSTEĞİ GELDİ ---");
-  try {
-    const { message, history } = req.body;
-    if (!message) throw new Error("Mesaj boş geldi.");
+  const { message, history } = req.body;
 
-    console.log("API Anahtarı Kontrol Ediliyor...");
+  try {
     if (!process.env.GROQ_API_KEY) {
-      throw new Error("GROQ_API_KEY bulunamadı! Lütfen Render ortam değişkenlerine ekleyin.");
+      throw new Error("GROQ_API_KEY Render'da tanımlı değil!");
     }
 
     const messages = [
@@ -29,13 +27,15 @@ app.post("/api/chat", async (req, res) => {
     ];
 
     if (history && Array.isArray(history)) {
-      history.forEach((m) => {
-        messages.push({ role: m.role === "user" ? "user" : "assistant", content: m.text });
-      });
+      history.forEach((m) => messages.push({ role: m.role === "user" ? "user" : "assistant", content: m.text }));
     }
     messages.push({ role: "user", content: message });
 
-    console.log("Groq'a istek atılıyor...");
+    console.log("Groq API'ye bağlanılıyor...");
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 saniye zaman aşımı
+
     const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -47,15 +47,19 @@ app.post("/api/chat", async (req, res) => {
         messages: messages,
         stream: true
       }),
+      signal: controller.signal
     });
+
+    clearTimeout(timeoutId);
 
     if (!response.ok) {
       const errorText = await response.text();
       console.log("GROQ API HATASI:", errorText);
-      throw new Error(`Groq API Hatası (${response.status}): ${errorText}`);
+      throw new Error(`Groq Hatası (${response.status}): ${errorText}`);
     }
 
     console.log("Bağlantı başarılı, stream başlıyor.");
+
     res.setHeader("Content-Type", "text/event-stream");
     res.setHeader("Cache-Control", "no-cache");
     res.setHeader("Connection", "keep-alive");
@@ -92,7 +96,7 @@ app.post("/api/chat", async (req, res) => {
     res.end();
   } catch (err) {
     console.log("SUNUCU HATASI:", err.message);
-    // Hata olsa bile JSON olarak tarayıcıya gönder (böylece app.js yakalayabilir)
+    // Hata olursa hemen JSON dön
     res.status(500).json({ error: err.message });
   }
 });
